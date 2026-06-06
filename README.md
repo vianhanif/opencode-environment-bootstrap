@@ -52,6 +52,29 @@ cd opencode-environment-bootstrap
 python3 installer.py
 ```
 
+### Snapshot → Clean → Redeploy
+
+Back up custom files, wipe everything, then reinstall:
+
+```bash
+# 1. Save your custom dotfiles and app configs
+python3 installer.py --snapshot ~/bootstrap-backup.zip
+
+# 2. Wipe configs + extras (apps stay), then re-deploy from scratch
+python3 installer.py --clean --config local-config.json
+
+# Or: clean-only (no re-deploy) — abort at the [y/N] prompt to skip, or
+# add --skip-* flags to control what gets re-deployed after cleaning:
+
+python3 installer.py --clean --skip-apps --skip-tools --config local-config.json
+```
+
+To restore custom files after re-deploy:
+
+```bash
+python3 installer.py --restore-snapshot ~/bootstrap-backup.zip --config local-config.json
+```
+
 ### Options
 
 ```
