@@ -370,21 +370,37 @@ When context grows long or noisy, use `/handoff <goal>` instead of writing a man
 <!-- /handoff -->
 
 # lean-ctx — Context Engineering Layer
-<!-- lean-ctx-rules-v10 -->
+<!-- lean-ctx-rules-v11 -->
 
-## Mode Selection
-- Editing the file? → `full` first, then `diff` for re-reads
-- Context only? → `map` or `signatures`
-- Large file? → `aggressive` or `entropy`
-- Specific lines? → `lines:N-M`
-- Unsure? → `auto`
+## Tool Mapping (MANDATORY — use instead of native equivalents)
+| Instead of | Use | Example |
+|------------|-----|---------|
+| Read/cat/head/tail | `ctx_read(path, mode)` | `ctx_read("src/main.rs", "full")` |
+| Grep/rg/find | `ctx_search(pattern, path)` | `ctx_search("fn handle", "src/")` |
+| Shell/bash | `ctx_shell(command)` | `ctx_shell("cargo test")` |
+| Edit (when Read unavailable) | `ctx_edit(path, old, new)` | `ctx_edit("f.rs", "old", "new")` |
 
-Anti-pattern: NEVER use `full` for files you won't edit — use `map` or `signatures`.
+## ctx_read Mode Selection
+| Goal | Mode | When |
+|------|------|------|
+| Edit this file | `full` | Before any edit |
+| Understand API | `signatures` | Context-only, won't edit |
+| Re-read after edit | `diff` | Post-edit verification |
+| Large file overview | `map` | >500 lines, won't edit |
+| Specific region | `lines:N-M` | Know exact location |
 
-## File Editing
-Use native Edit/Write/StrReplace — unchanged. lean-ctx replaces READ only.
-If Edit requires Read and Read is unavailable, use `ctx_edit(path, old_string, new_string)`.
-NEVER loop on Edit failures — switch to ctx_edit immediately.
+## Workflow (follow this order)
+1. **Orient:** `ctx_overview(task)` or `ctx_compose(task, path)` for unfamiliar tasks
+2. **Locate:** `ctx_search(pattern, path)` for exact text; `ctx_semantic_search(query)` for concepts
+3. **Read:** `ctx_read(path, mode)` with appropriate mode from table above
+4. **Edit:** `ctx_edit(path, old_string, new_string)` or native Edit if available
+5. **Verify:** `ctx_read(path, "diff")` + `ctx_shell("test command")`
+6. **Record:** `ctx_knowledge(action="remember", content="...")` for non-obvious findings
 
-Fallback only if a lean-ctx tool is unavailable: use native equivalents.
+## Session
+- **Start:** `ctx_session(action="status")` + `ctx_knowledge(action="wakeup")`
+- **End:** `ctx_session(action="decision", content="what was done + next steps")`
+- **On [CHECKPOINT]:** `ctx_session(action="task", value="current status")`
+
+NEVER use native Read/Grep/Shell when ctx_* equivalents are available.
 <!-- /lean-ctx -->
