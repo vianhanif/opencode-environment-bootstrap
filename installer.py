@@ -289,6 +289,57 @@ def ensure_apps(vars, dry_run=False):
         warn("Some apps failed to install. Check brew output above.")
 
 
+# ── Dev tools ──
+
+KUBECTL_MULTI_LOGS_REPO = "https://github.com/vianhanif/kubectl-multi-logs.git"
+
+def ensure_dev_tools(vars, dry_run=False):
+    """Install optional dev tools (kubectl-multi-logs)."""
+    step("Dev tools")
+
+    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
+    dest = projects_dir / "codes" / "kubectl-multi-logs"
+
+    if dest.exists() and (dest / "kubectl-multi-logs").exists():
+        info(f"kubectl-multi-logs already installed at {dest}")
+        return
+
+    if dry_run:
+        info(f"[dry-run] Would clone to {dest}")
+        return
+
+    if not shutil.which("git"):
+        warn("git not found — cannot clone kubectl-multi-logs")
+        return
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        run(["git", "clone", "--depth", "1", KUBECTL_MULTI_LOGS_REPO, str(dest)])
+        info(f"Cloned kubectl-multi-logs to {dest}")
+
+        # Install Python package
+        pip = shutil.which("pip3") or shutil.which("pip")
+        if pip:
+            run([pip, "install", "-e", str(dest)])
+            info("Installed kubectl-multi-logs Python package")
+        else:
+            warn("pip not found — kubectl-multi-logs cloned but not installed as a package")
+            info("Run: pip3 install -e {dest}")
+
+        # Symlink to ~/.local/bin
+        local_bin = Path.home() / ".local" / "bin"
+        local_bin.mkdir(parents=True, exist_ok=True)
+        symlink = local_bin / "kubectl-multi-logs"
+        if not symlink.exists():
+            symlink.symlink_to(dest / "kubectl-multi-logs")
+            info(f"Symlinked: {symlink}")
+
+    except subprocess.CalledProcessError as e:
+        warn(f"Failed to install kubectl-multi-logs: {e}")
+    except OSError as e:
+        warn(f"Symlink failed (try manual): {e}")
+
+
 # ── OpenCode config deployment ──
 
 def deploy_opencode_config(vars, dry_run=False):
@@ -495,6 +546,7 @@ def print_summary(vars):
     print("       export CONTEXT7_API_KEY='...'")
     print("       export FIRECRAWL_API_KEY='...'")
     print("    4. Restart opencode to load new config")
+    print("    5. Test multilogs: multilogs --help")
     print()
     print(f"  Config used:")
     for key in ("PROJECTS_DIR", "GITLAB_ORG", "METABASE_URL"):
@@ -553,11 +605,15 @@ def main():
     if not args.skip_shell:
         deploy_shell_config(vars, args.dry_run)
 
-    # Phase 4: App configs
+    # Phase 4: Dev tools
+    if not args.skip_tools:
+        ensure_dev_tools(vars, args.dry_run)
+
+    # Phase 5: App configs
     if not args.skip_app_configs:
         deploy_app_configs(vars, args.dry_run)
 
-    # Phase 5: Verify
+    # Phase 6: Verify
     verify_deployment(vars, args.dry_run)
 
     # Summary
