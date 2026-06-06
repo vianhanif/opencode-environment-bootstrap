@@ -1,0 +1,100 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "format_on_save": "off",
+  "edit_predictions": {
+    "open_ai_compatible_api": {
+      "max_output_tokens": 64,
+    },
+  },
+  "agent_servers": {},
+  "project_panel": {
+    "dock": "left",
+  },
+  "outline_panel": {
+    "dock": "left",
+  },
+  "collaboration_panel": {
+    "dock": "left",
+  },
+  "git_panel": {
+    "dock": "left",
+  },
+  "language_models": {},
+  "context_servers": {},
+  "agent": {
+    "dock": "right",
+    "tool_permissions": {
+      "tools": {
+        "delete_path": {
+          "default": "allow",
+        },
+        "create_directory": {
+          "default": "allow",
+        },
+        "move_path": {
+          "default": "allow",
+        },
+        "terminal": {
+          "default": "allow",
+        },
+      },
+    },
+    "profiles": {},
+    "default_model": {
+      "provider": "opencode",
+      "model": "big-pickle",
+      "enable_thinking": false,
+    },
+    "favorite_models": [
+      {
+        "provider": "openrouter",
+        "model": "deepseek/deepseek-v3.2",
+        "enable_thinking": false,
+      },
+      {
+        "provider": "openrouter",
+        "model": "anthropic/claude-sonnet-4.6",
+        "enable_thinking": false,
+      },
+    ],
+    "model_parameters": [],
+  },
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)",
+  },
+  "session": {
+    "trust_all_worktrees": true,
+  },
+  "terminal": {
+    "font_family": "Menlo for Powerline",
+    "line_height": {
+      "custom": 1.3,
+    },
+    "cursor_shape": "bar",
+  },
+  "minimap": {
+    "show": "auto",
+  },
+  "buffer_font_fallbacks": ["Menlo for Powerline"],
+  "buffer_font_family": "Cascadia Code",
+  "file_types": {
+    "javascriptreact": ["*.js"],
+  },
+  "base_keymap": "VSCode",
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "system",
+    "light": "Ayu Mirage",
+    "dark": "One Dark",
+  },
+}

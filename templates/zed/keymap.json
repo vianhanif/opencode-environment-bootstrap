@@ -1,0 +1,9 @@
+[
+  {
+    "context": "Terminal",
+    "bindings": {
+      "alt-left": ["terminal::SendKeystroke", "alt-left"],
+      "alt-right": ["terminal::SendKeystroke", "alt-right"]
+    }
+  }
+]

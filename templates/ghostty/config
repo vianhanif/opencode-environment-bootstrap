@@ -1,0 +1,21 @@
+# Ghostty Config
+# https://ghostty.org/docs/configuration
+
+# Shell (use "command" not "shell")
+command = /bin/zsh
+
+# Font
+font-size = 14
+
+# Theme
+theme = dracula
+
+# Window
+window-padding-x = 8
+window-padding-y = 4
+
+# Alt+Left/Right for word navigation (sends Esc+b / Esc+f)
+# Zsh default emacs mode binds these to backward-word / forward-word
+keybind = alt+left=text:\x1bb
+keybind = alt+right=text:\x1bf
+

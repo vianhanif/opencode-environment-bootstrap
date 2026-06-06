@@ -1,0 +1,163 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "context7": {
+      "enabled": true,
+      "headers": {
+        "CONTEXT7_API_KEY": "$CONTEXT7_API_KEY"
+      },
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "duckdb": {
+      "command": [
+        "uvx",
+        "mcp-server-motherduck",
+        "--db-path",
+        ":memory:",
+        "--read-write",
+        "--allow-switch-databases"
+      ],
+      "enabled": true,
+      "type": "local"
+    },
+    "firecrawl": {
+      "command": [
+        "npx",
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "enabled": true,
+      "environment": {},
+      "type": "local"
+    },
+    "lean-ctx": {
+      "command": [
+        "$HOME/.local/bin/lean-ctx"
+      ],
+      "enabled": true,
+      "environment": {
+        "LEAN_CTX_DATA_DIR": "$HOME/.config/lean-ctx"
+      },
+      "type": "local"
+    },
+    "mcp-mermaid": {
+      "command": [
+        "npx",
+        "-y",
+        "mcp-mermaid"
+      ],
+      "enabled": true,
+      "type": "local"
+    },
+    "metabase-staging": {
+      "command": [
+        "npx",
+        "-y",
+        "@imlewc/metabase-server"
+      ],
+      "enabled": false,
+      "environment": {
+        "METABASE_PASSWORD": "$METABASE_PASS",
+        "METABASE_URL": "$METABASE_URL",
+        "METABASE_USERNAME": "$METABASE_USER"
+      },
+      "type": "local"
+    },
+    "metabase": {
+      "command": [
+        "npx",
+        "-y",
+        "@imlewc/metabase-server"
+      ],
+      "enabled": false,
+      "environment": {
+        "METABASE_PASSWORD": "$METABASE_PASS",
+        "METABASE_URL": "$METABASE_URL",
+        "METABASE_USERNAME": "$METABASE_USER"
+      },
+      "type": "local"
+    },
+    "sequential-thinking": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "enabled": true,
+      "type": "local"
+    },
+    "serena": {
+      "command": [
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide",
+        "--project-from-cwd",
+        "--enable-web-dashboard",
+        "false",
+        "--open-web-dashboard",
+        "false"
+      ],
+      "enabled": true,
+      "type": "local"
+    }
+  },
+  "plugin": [
+    "@warp-dot-dev/opencode-warp@0.1.5",
+    "opencode-handoff@0.5.0"
+  ],
+  "agent": {
+    "plan": {
+      "description": "Understand and document tasks before any coding",
+      "mode": "all",
+      "model": "openrouter/deepseek/deepseek-chat-v4-pro",
+      "prompt": "{file:./skills/planner/SKILL.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny",
+        "bash": "deny"
+      }
+    },
+    "code": {
+      "description": "Implement code changes incrementally per task documentation",
+      "mode": "subagent",
+      "model": "openrouter/deepseek/deepseek-chat-v4-flash",
+      "prompt": "{file:./skills/coder/SKILL.md}"
+    },
+    "review": {
+      "description": "Review diffs for correctness, risks, and consistency",
+      "mode": "subagent",
+      "model": "openrouter/deepseek/deepseek-chat-v4-pro",
+      "prompt": "{file:./skills/reviewer/SKILL.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "test": {
+      "description": "Execute test plans and verify behavior",
+      "mode": "subagent",
+      "model": "openrouter/deepseek/deepseek-chat-v4-flash",
+      "prompt": "{file:./skills/tester/SKILL.md}",
+      "permission": {
+        "bash": "allow"
+      }
+    },
+    "analyze": {
+      "description": "Investigate issues, trace code paths, and analyze logs",
+      "mode": "all",
+      "model": "openrouter/deepseek/deepseek-chat-v4-pro",
+      "prompt": "{file:./skills/analyzer/SKILL.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny"
+      }
+    }
+  },
+  "shell": "/bin/zsh",
+  "tools": {
+    "auto_call": true,
+    "prefer_mcp": true
+  }
+}
