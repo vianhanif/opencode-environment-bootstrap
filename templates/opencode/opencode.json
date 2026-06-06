@@ -152,8 +152,9 @@
       "model": "opencode-go/deepseek-v4-pro",
       "prompt": "{file:./skills/analyzer/SKILL.md}",
       "permission": {
-        "edit": "deny",
-        "write": "deny"
+        "edit": "allow",
+        "write": "allow",
+        "bash": "allow"
       }
     }
   },
