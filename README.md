@@ -2,8 +2,6 @@
 
 One-shot bootstrap for an opinionated AI engineering environment. Installs and configures [OpenCode](https://opencode.ai) with role-based multi-agent workflow, shell tooling, and editor/terminal/API-client config in a single run.
 
-## Overview
-
 ## Why
 
 Setting up a new machine for AI-assisted development involves the same tedious steps every time:
