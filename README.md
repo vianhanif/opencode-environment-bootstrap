@@ -2,6 +2,32 @@
 
 One-shot bootstrap for an opinionated AI engineering environment. Installs and configures [OpenCode](https://opencode.ai) with role-based multi-agent workflow, shell tooling, and editor/terminal/API-client config in a single run.
 
+## Overview
+
+```mermaid
+mindmap
+  root((opencode-bootstrap))
+    Fresh machine
+      Install opencode CLI
+      Deploy config & agents
+      Set up shell dotfiles
+      Install dev tools
+      Install apps via brew
+      Configure editor & terminal
+    Sync updates
+      Backup existing config
+      Re-deploy templates
+      Restore custom files
+    Clean rebuild
+      Wipe configs + extras
+      Apps stay installed
+      Re-deploy from scratch
+    Snapshot & restore
+      Backup dotfiles to ZIP
+      Restore after redeploy
+      Preserve API keys
+```
+
 ## Why
 
 Setting up a new machine for AI-assisted development involves the same tedious steps every time:
