@@ -177,7 +177,7 @@ def deploy_file(src, dst, vars=None, backup_dir=None, dry_run=False):
         bk.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(dst, bk)
 
-    content = template_path.read_text()
+    content = src.read_text()
     if vars:
         content = Template(content).safe_substitute(**vars)
 
