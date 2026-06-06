@@ -4,19 +4,10 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 
 ## Overview
 
-```mermaid
-mindmap
-  root((AI Engineering Environment))
-    opencode CLI -- AI coding with MCPs & custom agents
-    Zed editor -- high-performance, multiplayer code editor (from creators of Atom)
-    Ghostty terminal -- GPU-accelerated terminal
-    Bruno API client -- offline-first, git-synced collections
-    glab -- GitLab CLI for MRs & project management
-    git-review-cli -- one-command automated code reviews
-    lean-ctx -- context compression for AI agents
-    multilogs -- aggregate logs across K8s pods
-    opencode-session -- browse & search session history
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="architecture.svg">
+  <img src="architecture.svg" alt="Architecture diagram" width="800">
+</picture>
 
 ## Why
 
@@ -38,7 +29,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 | **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin, handoff plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
-| **Zed** | Settings, keymap, lean-ctx rules | `~/.config/zed/` |
+| **Zed** | Vim keybindings, LSP config, lean-ctx context rules | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
 
