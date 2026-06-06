@@ -47,13 +47,13 @@ Annotate tasks with role prefixes to delegate to role-specific subagents. The pa
 
 | Annotation | Role | Delegates via |
 |-----------|------|--------------------------------------|
-| `@plan` | Planner | task(subagent_type: "plan") |
-| `@code` | Coder | task(subagent_type: "code") |
-| `@review` | Reviewer | task(subagent_type: "review") |
-| `@test` | Tester | task(subagent_type: "test") |
-| `@analyze` | Analyzer | task(subagent_type: "analyze") |
+| `@plan` | Planner | task(subagent_type: "planner") |
+| `@code` | Coder | task(subagent_type: "coder") |
+| `@review` | Reviewer | task(subagent_type: "reviewer") |
+| `@test` | Tester | task(subagent_type: "tester") |
+| `@analyze` | Analyzer | task(subagent_type: "analyzer") |
 
-Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@plan` and `@analyze` can also be invoked directly as primary agents via `/agent plan` or `/agent analyze`.
+Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@plan` and `@analyze` can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`.
 
 **Dependency rules:**
 - `@result` before a role = depends on ALL preceding annotated tasks since the last `@result`
