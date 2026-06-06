@@ -30,8 +30,18 @@ The templates are generic — no hardcoded usernames, API keys, or organization-
 
 ## Usage
 
+One-liner (auto-cleanup, no clone left behind):
+
 ```bash
-curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | bash
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --config /path/to/local-config.json
+```
+
+With inline env vars instead of a config file:
+
+```bash
+CONTEXT7_API_KEY=ctx7sk-... FIRECRAWL_API_KEY=fc-... \
+  curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | bash
 ```
 
 Or clone and run directly:
