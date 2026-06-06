@@ -736,14 +736,35 @@ CLEAN_PATHS = [
     Path.home() / ".config" / "zed" / "keymap.json",
     Path.home() / ".config" / "zed" / "rules",
     Path.home() / ".config" / "ghostty" / "config",
-    Path.home() / "Library" / "Application Support" / "Bruno" / "preferences.json",
+    Path.home() / "Library" / "Application Support" / "Bruno",
+    Path.home() / ".local" / "bin" / "git-review-cli",
+    Path.home() / ".local" / "bin" / "kubectl-multi-logs",
+    Path.home() / ".local" / "bin" / "opencode-session",
 ]
 
+CLEAN_BREW_CASKS = ["zed", "ghostty", "bruno"]
 
-def clean_machine(dry_run=False):
-    """Remove managed config files/dirs to simulate fresh machine."""
+
+def _remove_sourcing_block(zshrc):
+    """Remove the opencode-bootstrap sourcing block from .zshrc."""
+    if not zshrc.exists():
+        return False
+    text = zshrc.read_text()
+    if ZSH_SOURCING_HEADER not in text:
+        return False
+    start = text.index(ZSH_SOURCING_HEADER)
+    end = text.index(ZSH_SOURCING_FOOTER) + len(ZSH_SOURCING_FOOTER) + 1
+    new_text = text[:start].rstrip() + "\n" + text[end:]
+    zshrc.write_text(new_text)
+    return True
+
+
+def clean_machine(vars=None, dry_run=False):
+    """Remove everything the installer manages — full uninstall."""
     step("Cleaning machine to fresh state")
     removed = 0
+
+    # 1. Managed config files/dirs + dev tool symlinks
     for p in CLEAN_PATHS:
         if not p.exists():
             continue
@@ -751,12 +772,53 @@ def clean_machine(dry_run=False):
             print(f"  [dry-run] Would remove: {p}")
             removed += 1
             continue
-        if p.is_dir():
+        if p.is_dir() and not p.is_symlink():
             shutil.rmtree(p)
         else:
             p.unlink()
         info(f"Removed: {p}")
         removed += 1
+
+    # 2. .zshrc sourcing block
+    zshrc = Path.home() / ".zshrc"
+    if dry_run:
+        if zshrc.exists() and ZSH_SOURCING_HEADER in zshrc.read_text():
+            print(f"  [dry-run] Would remove sourcing block from {zshrc}")
+            removed += 1
+    else:
+        if _remove_sourcing_block(zshrc):
+            info(f"Removed sourcing block from {zshrc}")
+            removed += 1
+
+    # 3. Bruno collections (cloned repos)
+    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser() if vars else Path("~/projects").expanduser()
+    collections_dir = projects_dir / "bruno" / "collections"
+    if collections_dir.exists():
+        if dry_run:
+            print(f"  [dry-run] Would remove Bruno collections: {collections_dir}")
+            removed += 1
+        else:
+            shutil.rmtree(collections_dir)
+            info(f"Removed Bruno collections: {collections_dir}")
+            removed += 1
+
+    # 4. Homebrew casks (prompted)
+    if shutil.which("brew") and not dry_run:
+        for cask in CLEAN_BREW_CASKS:
+            result = subprocess.run(
+                ["brew", "list", "--cask", cask],
+                capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                continue
+            answer = input(f"  Uninstall Homebrew cask '{cask}'? [y/N] ").strip().lower()
+            if answer == "y":
+                subprocess.run(["brew", "uninstall", "--cask", cask])
+                info(f"Uninstalled: {cask}")
+                removed += 1
+            else:
+                info(f"Skipped: {cask}")
+
     if removed == 0:
         info("Nothing to clean")
     else:
@@ -834,7 +896,7 @@ def main():
 
     # Clean: wipe managed configs before install
     if args.clean:
-        clean_machine(args.dry_run)
+        clean_machine(vars, args.dry_run)
 
     # Phase 1: Install apps (optional)
     if not args.skip_apps:
