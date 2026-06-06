@@ -764,14 +764,77 @@ def _remove_sourcing_block(zshrc):
 def clean_machine(vars=None, dry_run=False):
     """Remove everything the installer manages — full uninstall."""
     step("Cleaning machine to fresh state")
-    removed = 0
 
-    # 1. Managed config files/dirs + dev tool symlinks
+    # Scan what can be cleaned
+    zshrc_block = False
+    zshrc = Path.home() / ".zshrc"
+    if zshrc.exists() and ZSH_SOURCING_HEADER in zshrc.read_text():
+        zshrc_block = True
+
+    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser() if vars else Path("~/projects").expanduser()
+    collections_dir = projects_dir / "bruno" / "collections"
+
+    to_remove = []
     for p in CLEAN_PATHS:
-        if not p.exists():
+        if p.exists():
+            to_remove.append(p)
+    if zshrc_block:
+        to_remove.append(zshrc)
+    if collections_dir.exists():
+        to_remove.append(collections_dir)
+
+    brew_formulae = []
+    if shutil.which("brew"):
+        for item in CLEAN_BREW:
+            r = subprocess.run(["brew", "list", item], capture_output=True, text=True)
+            if r.returncode == 0:
+                brew_formulae.append(item)
+
+    pip_pkgs = []
+    for pkg in ["git-review-cli", "kubectl-multi-logs"]:
+        r = subprocess.run(
+            ["python3", "-m", "pip", "show", pkg],
+            capture_output=True, text=True,
+        )
+        if r.returncode == 0:
+            pip_pkgs.append(pkg)
+
+    # Show what will be removed
+    session_dir = projects_dir / "codes" / "opencode-session-viewer"
+    extra_dirs = []
+    if session_dir.exists():
+        extra_dirs.append(session_dir)
+
+    print()
+    for p in to_remove:
+        print(f"  • {p}")
+    for d in extra_dirs:
+        print(f"  • {d}")
+    if brew_formulae:
+        print(f"  • brew uninstall: {', '.join(brew_formulae)}")
+    if pip_pkgs:
+        print(f"  • pip uninstall: {', '.join(pip_pkgs)}")
+    total = len(to_remove) + len(extra_dirs) + len(brew_formulae) + len(pip_pkgs)
+    if dry_run:
+        print(f"\n  {total} items would be removed")
+        return
+
+    answer = input("\n  Proceed? [y/N] ").strip().lower()
+    if answer != "y":
+        info("Aborted")
+        return
+
+    # Do the cleaning
+    removed = 0
+    for p in to_remove:
+        if p == zshrc:
+            if _remove_sourcing_block(zshrc):
+                info(f"Removed sourcing block from {zshrc}")
+                removed += 1
             continue
-        if dry_run:
-            print(f"  [dry-run] Would remove: {p}")
+        if p == collections_dir:
+            shutil.rmtree(collections_dir)
+            info(f"Removed Bruno collections: {collections_dir}")
             removed += 1
             continue
         if p.is_dir() and not p.is_symlink():
@@ -781,69 +844,25 @@ def clean_machine(vars=None, dry_run=False):
         info(f"Removed: {p}")
         removed += 1
 
-    # 2. .zshrc sourcing block
-    zshrc = Path.home() / ".zshrc"
-    if dry_run:
-        if zshrc.exists() and ZSH_SOURCING_HEADER in zshrc.read_text():
-            print(f"  [dry-run] Would remove sourcing block from {zshrc}")
-            removed += 1
-    else:
-        if _remove_sourcing_block(zshrc):
-            info(f"Removed sourcing block from {zshrc}")
-            removed += 1
+    for d in extra_dirs:
+        shutil.rmtree(d)
+        info(f"Removed: {d}")
+        removed += 1
 
-    # 3. Bruno collections (cloned repos)
-    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser() if vars else Path("~/projects").expanduser()
-    collections_dir = projects_dir / "bruno" / "collections"
-    if collections_dir.exists():
-        if dry_run:
-            print(f"  [dry-run] Would remove Bruno collections: {collections_dir}")
-            removed += 1
-        else:
-            shutil.rmtree(collections_dir)
-            info(f"Removed Bruno collections: {collections_dir}")
-            removed += 1
+    for item in brew_formulae:
+        subprocess.run(["brew", "uninstall", item], capture_output=True)
+        info(f"Uninstalled (brew): {item}")
+        removed += 1
 
-    # 4. Homebrew (apps + tools)
-    if shutil.which("brew") and not dry_run:
-        for item in CLEAN_BREW:
-            result = subprocess.run(
-                ["brew", "list", item],
-                capture_output=True, text=True,
-            )
-            if result.returncode != 0:
-                continue
-            subprocess.run(["brew", "uninstall", item], capture_output=True)
-            info(f"Uninstalled (brew): {item}")
-            removed += 1
+    for pkg in pip_pkgs:
+        subprocess.run(
+            ["python3", "-m", "pip", "uninstall", "-y", pkg],
+            capture_output=True, text=True,
+        )
+        info(f"Uninstalled (pip): {pkg}")
+        removed += 1
 
-    # 5. Python pip packages (git-review-cli, kubectl-multi-logs, opencode-session)
-    if not dry_run:
-        for pkg in ["git-review-cli", "kubectl-multi-logs"]:
-            result = subprocess.run(
-                ["python3", "-m", "pip", "uninstall", "-y", pkg],
-                capture_output=True, text=True,
-            )
-            if result.returncode == 0:
-                info(f"Uninstalled (pip): {pkg}")
-                removed += 1
-
-    # 6. Cloned dev tool repos (opencode-session-viewer)
-    if projects_dir:
-        session_dir = projects_dir / "codes" / "opencode-session-viewer"
-        if session_dir.exists():
-            if dry_run:
-                print(f"  [dry-run] Would remove: {session_dir}")
-                removed += 1
-            else:
-                shutil.rmtree(session_dir)
-                info(f"Removed: {session_dir}")
-                removed += 1
-
-    if removed == 0:
-        info("Nothing to clean")
-    else:
-        info(f"Cleaned {removed} paths")
+    info(f"Cleaned {removed} paths")
 
 
 # ── Verification ──
