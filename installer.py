@@ -815,14 +815,18 @@ def clean_machine(vars=None, dry_run=False):
     if pip_pkgs:
         print(f"  • pip uninstall: {', '.join(pip_pkgs)}")
     total = len(to_remove) + len(extra_dirs) + len(brew_formulae) + len(pip_pkgs)
+    if total == 0:
+        info("Nothing to clean")
+        return True
+
     if dry_run:
         print(f"\n  {total} items would be removed")
-        return
+        return True
 
     answer = input("\n  Proceed? [y/N] ").strip().lower()
     if answer != "y":
         info("Aborted")
-        return
+        return False
 
     # Do the cleaning
     removed = 0
@@ -863,6 +867,7 @@ def clean_machine(vars=None, dry_run=False):
         removed += 1
 
     info(f"Cleaned {removed} paths")
+    return True
 
 
 # ── Verification ──
@@ -936,7 +941,8 @@ def main():
 
     # Clean: wipe managed configs before install
     if args.clean:
-        clean_machine(vars, args.dry_run)
+        if not clean_machine(vars, args.dry_run):
+            return
 
     # Phase 1: Install apps (optional)
     if not args.skip_apps:
