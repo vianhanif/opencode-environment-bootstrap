@@ -489,6 +489,45 @@ def ensure_bruno_collections(vars, dry_run=False):
             warn(f"Failed to clone collection '{name}': {e}")
 
 
+# ── MCP runtime checks ──
+
+def ensure_mcp_runtimes(vars, dry_run=False):
+    """Check that tools required by configured MCP servers are available.
+
+    Warns if missing and optionally installs via Homebrew when apps phase is active.
+    """
+    deps = []
+
+    if not shutil.which("npx"):
+        deps.append(("npx (Node.js)", "brew install node", "node"))
+    if not shutil.which("uvx"):
+        deps.append(("uvx", "brew install uv", "uv"))
+
+    if not deps:
+        return
+
+    step("MCP runtime dependencies")
+
+    # serena is optional — just warn
+    if not shutil.which("serena"):
+        warn("serena binary not found — serena MCP will be disabled")
+
+    for label, brew_cmd, brew_pkg in deps:
+        if dry_run:
+            info(f"[dry-run] Would install: {brew_pkg} via Homebrew")
+            continue
+        r = subprocess.run(["brew", "list", brew_pkg], capture_output=True, text=True)
+        if r.returncode == 0:
+            warn(f"{label} is installed but not in PATH — may need shell restart")
+            continue
+        info(f"Installing {brew_pkg} via Homebrew...")
+        subprocess.run(brew_cmd.split(), capture_output=True)
+        if shutil.which(brew_pkg.replace("brew install ", "")):
+            info(f"  ✓ {label} installed")
+        else:
+            warn(f"{label} install may have failed — install manually: {brew_cmd}")
+
+
 # ── OpenCode config deployment ──
 
 def deploy_opencode_config(vars, dry_run=False):
@@ -920,6 +959,9 @@ def main():
     # Phase 1: Install apps (optional)
     if not args.skip_apps:
         ensure_apps(vars, args.dry_run)
+
+    # MCP runtime checks (npx, uvx, serena) — runs after apps so brew is ready
+    ensure_mcp_runtimes(vars, args.dry_run)
 
     # Phase 2: Install opencode CLI
     backup = None

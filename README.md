@@ -187,11 +187,25 @@ Shows a full list of what will be removed and prompts `[y/N]` before executing. 
 
 ### What is NOT included (you add these yourself)
 
-- **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
+- **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install. Firecrawl MCP is pre-configured with your `FIRECRAWL_API_KEY` from the config file — no manual wiring needed.
 - **GitLab authentication** — `glab auth login` or `GITLAB_TOKEN` must be set for `git-review-cli` and Bruno collection cloning.
 - **Bruno environments** — Contains API keys and service URLs. Copy or configure separately after cloning collections.
 - **Kubernetes context** — `kubectl` must already be installed and authenticated for `multilogs` and `pod-app-list` to work.
 - **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
+
+### MCP runtime dependencies
+
+The opencode config includes several MCP servers that depend on external runtimes. The installer checks for these and installs missing ones via Homebrew:
+
+| MCP server | Runtime | Installer action | Notes |
+|------------|---------|------------------|-------|
+| duckdb | `uvx` | `brew install uv` if missing | Always installed |
+| firecrawl, mcp-mermaid, metabase, sequential-thinking | `npx` (Node.js) | `brew install node` if missing | Always installed |
+| serena | `serena` binary | Warns if missing | Optional — install manually via `uv tool install serena-agent` |
+| lean-ctx | `lean-ctx` binary | Runs install script | Installed in Phase 4 (dev tools) |
+| context7 | None (remote) | Not needed | Uses your `CONTEXT7_API_KEY` |
+
+The check runs after app installations so Homebrew is ready. Use `--skip-apps` to skip brew-based installs — runtimes will still be checked and warned about if missing.
 
 ## Development
 

@@ -28,7 +28,9 @@
         "firecrawl-mcp"
       ],
       "enabled": true,
-      "environment": {},
+      "environment": {
+        "FIRECRAWL_API_KEY": "$FIRECRAWL_API_KEY"
+      },
       "type": "local"
     },
     "lean-ctx": {
