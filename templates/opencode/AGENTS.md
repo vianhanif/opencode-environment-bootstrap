@@ -16,13 +16,13 @@ Act as a structured engineering assistant, not a blind code generator.
 ### Sessions (Required)
 Every development task uses **role-focused sessions**. Keep each session aligned to one goal; use skill switching within a session only for the test-fix cycle.
 
-| Session | Role | Purpose | When |
-|---------|------|---------|------|
-| 1 | Planner | Understand + document the task | Before any coding |
-| 2 | Coder | Implement changes incrementally | After planning is complete |
-| 3 | Reviewer | Validate correctness and risks | For complex changes |
-| 4 | Tester | Execute test plans, verify behavior | After coding, or in test-fix cycles |
-| 5 | Analyzer | Investigate issues, trace code, analyze logs | Bug/incident investigation |
+| Session | Role | Purpose (from opencode.json) | When |
+|---------|------|-----------------------------|------|
+| 1 | Planner | Understand and document tasks before any coding | Before any coding |
+| 2 | Coder | Implement code changes incrementally per task documentation | After planning is complete |
+| 3 | Reviewer | Review diffs for correctness, risks, and consistency | For complex changes |
+| 4 | Tester | Execute test plans and verify behavior | After coding, or in test-fix cycles |
+| 5 | Analyzer | Investigate issues, trace code paths, and analyze logs | Bug/incident investigation |
 
 ```
 Primary flow (ideal):
@@ -53,7 +53,7 @@ Annotate tasks with role prefixes to delegate to role-specific subagents. The pa
 | `@tester` | Tester | task(subagent_type: "tester") |
 | `@analyzer` | Analyzer | task(subagent_type: "analyzer") |
 
-Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@planner` and `@analyzer` can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`.
+Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@planner` and `@analyzer` (`mode: "all"`) can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`. `@coder`, `@reviewer`, and `@tester` (`mode: "subagent"`) can only be used in delegation.
 
 **Dependency rules:**
 - `@result` before a role = depends on ALL preceding annotated tasks since the last `@result`
@@ -139,6 +139,7 @@ MiniMax M2.5/M2.7 has a recurring JSON serialization bug in tool calls:
 - `CODER-role.md` - Implementation rules + 10 coding principles
 - `REVIEWER-role.md` - Review checklist
 - `TESTER-role.md` - Testing guidelines
+- `ANALYZER-role.md` - Investigation workflow and root cause analysis
 
 ---
 
