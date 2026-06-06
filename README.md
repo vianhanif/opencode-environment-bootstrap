@@ -8,7 +8,7 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 mindmap
   root((AI Engineering Environment))
     opencode CLI -- AI coding with MCPs & custom agents
-    Zed editor -- fast editor with Vim & lean-ctx rules
+    Zed editor -- high-performance, multiplayer code editor (from creators of Atom)
     Ghostty terminal -- GPU-accelerated terminal
     Bruno API client -- offline-first, git-synced collections
     glab -- GitLab CLI for MRs & project management
