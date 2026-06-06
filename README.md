@@ -8,37 +8,37 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 mindmap
   root((AI Engineering Environment))
     opencode CLI
-      MCP servers
-        context7
-        duckdb
-        firecrawl
-        mermaid
-        metabase
-        sequential-thinking
-        serena
-        lean-ctx
+      MCP integration
+        context7 -- live docs lookup
+        duckdb -- query databases directly
+        firecrawl -- scrape & search the web
+        mermaid -- generate diagrams on the fly
+        metabase -- analytics from chat
+        sequential-thinking -- structured reasoning
+        serena -- codebase indexing & navigation
+        lean-ctx -- context compression for AI
       Custom agents
-        plan
-        code
-        review
-        test
-        analyze
+        plan -- research & document before coding
+        code -- implement incrementally
+        review -- catch bugs & regressions
+        test -- verify behavior
+        analyze -- root cause investigation
     Zed editor
-      Settings
-      Keymap
-      lean-ctx rules
+      Fast startup & Vim mode
+      lean-ctx rules for AI context
+      Multi-cursor, LSP, inline diagnostics
     Ghostty terminal
-      Dracula theme
+      GPU-accelerated rendering
+      Dracula theme & word-navigation
     Bruno API client
-      Collections
-      Dark theme
-    Shell & CLI
-      zsh aliases
-      Functions
-      glab GitLab CLI
-      git-review-cli
-      opencode-session
-      kubectl-multi-logs
+      Offline-first, no account needed
+      Git-synced collections
+    Shell & CLI tools
+      glab -- GitLab from the terminal
+      git-review-cli -- one-command MR reviews
+      opencode-session -- browse session history
+      multilogs -- aggregate K8s pod logs
+      pod-app-list -- discover running services
 ```
 
 ## Why
