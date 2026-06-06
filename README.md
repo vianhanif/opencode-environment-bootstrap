@@ -54,25 +54,24 @@ python3 installer.py
 
 ### Snapshot → Clean → Redeploy
 
-Back up custom files, wipe everything, then reinstall:
+Back up custom files, wipe everything, then reinstall — all via `curl | bash`:
 
 ```bash
-# 1. Save your custom dotfiles and app configs
-python3 installer.py --snapshot ~/bootstrap-backup.zip
+# 1. Snapshot — save your custom dotfiles and app configs before wiping
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --snapshot ~/bootstrap-backup.zip
 
-# 2. Wipe configs + extras (apps stay), then re-deploy from scratch
-python3 installer.py --clean --config local-config.json
+# 2. Clean + redeploy — wipe configs + extras (apps stay), then reinstall fresh
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --clean --config /path/to/local-config.json
 
-# Or: clean-only (no re-deploy) — abort at the [y/N] prompt to skip, or
-# add --skip-* flags to control what gets re-deployed after cleaning:
+# Or: use --skip-* flags to control what gets deployed after cleaning:
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --clean --skip-apps --skip-tools --config /path/to/local-config.json
 
-python3 installer.py --clean --skip-apps --skip-tools --config local-config.json
-```
-
-To restore custom files after re-deploy:
-
-```bash
-python3 installer.py --restore-snapshot ~/bootstrap-backup.zip --config local-config.json
+# 3. Restore snapshot on top of fresh deployment
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --restore-snapshot ~/bootstrap-backup.zip --config /path/to/local-config.json
 ```
 
 ### Options
