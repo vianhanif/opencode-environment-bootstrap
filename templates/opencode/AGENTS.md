@@ -291,6 +291,67 @@ Available skills:
 - `tester` - Load for testing guidance
 - `analyzer` - Load for production issue investigation and root cause analysis
 
+## Local Tools
+
+The following tools are installed by `opencode-environment-bootstrap`. The AI agent should use them when relevant.
+
+### glab — GitLab CLI
+Primary interface for GitLab merge requests and project management.
+
+```bash
+glab mr view <id>              # View MR details
+glab mr diff <id>              # View MR diff
+glab mr note <id> -m "review"  # Post a comment on MR
+glab api <endpoint>            # Direct API access
+```
+
+### git-review-cli — MR Review Tool
+Automates MR diff fetching, local checkout, and review posting.
+
+```bash
+git-review-cli https://gitlab.com/org/project/-/merge_requests/123
+git-review-cli https://gitlab.com/org/project/-/merge_requests/123 --caveman   # Quick review
+git-review-cli https://gitlab.com/org/project/-/merge_requests/123 --deep      # Deep review
+git-review-cli <MR_ID>                    # Shorthand (current repo)
+git-review-cli <ID> --post /tmp/review.md # Post a review file
+```
+
+**Prerequisite:** Authenticate glab first (`glab auth login` or set `GITLAB_TOKEN`).
+
+### opencode-session — Session Viewer
+View and search OpenCode session history from the local SQLite database.
+
+```bash
+opencode-session              # List recent sessions
+opencode-session ses_xxx      # View session details
+opencode-session -s 'text'    # Search session content
+```
+
+Can be used inside OpenCode TUI as: `!opencode-session ses_xxx` or `!opencode-session -s 'text'`
+
+### multilogs — Kubernetes Log Aggregation
+Aggregate logs from multiple Kubernetes pods across services.
+
+```bash
+multilogs -s 10m -o <app1> <app2>     # Fetch last 10 min to file
+multilogs <app-name>                   # Stream logs from all pods
+multilogs -h                           # Show help
+```
+
+**Gotcha:** When called from a non-interactive shell (e.g., via `bash` tool), prepend `source ~/.zshrc`:
+```bash
+source ~/.zshrc && multilogs -s 10m -o core-api core-worker
+```
+
+### pod-app-list — List Kubernetes Apps
+Lists all unique `app` labels from running pods.
+
+```bash
+pod-app-list   # Returns sorted, deduplicated app names
+```
+
+---
+
 # opencode-handoff — Session Handoff
 <!-- handoff -->
 

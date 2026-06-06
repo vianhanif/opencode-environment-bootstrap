@@ -29,6 +29,7 @@ Config variables (env vars or config file):
   METABASE_USER      Metabase username                 (optional)
   METABASE_PASS      Metabase password                 (optional)
   GITLAB_ORG         GitLab org for MR workflows       (optional)
+  BRUNO_COLLECTIONS  JSON array of {name, repo, subdir} (optional)
 
 Examples:
   python3 installer.py --force
@@ -291,53 +292,180 @@ def ensure_apps(vars, dry_run=False):
 
 # ── Dev tools ──
 
-KUBECTL_MULTI_LOGS_REPO = "https://github.com/vianhanif/kubectl-multi-logs.git"
+REPOS = {
+    "kubectl-multi-logs":  "https://github.com/vianhanif/kubectl-multi-logs.git",
+    "git-review-cli":      "https://github.com/vianhanif/git-review-cli.git",
+    "opencode-session":    "https://github.com/vianhanif/opencode-session-viewer.git",
+}
 
-def ensure_dev_tools(vars, dry_run=False):
-    """Install optional dev tools (kubectl-multi-logs)."""
-    step("Dev tools")
+def _clone_repo(url, dest, dry_run=False):
+    """Clone a git repo shallowly. Returns True on success."""
+    if not shutil.which("git"):
+        warn("git not found — skipping clone")
+        return False
+    if dry_run:
+        info(f"[dry-run] Would clone {url} to {dest}")
+        return True
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    run(["git", "clone", "--depth", "1", url, str(dest)])
+    return True
 
+def _pip_install(path, dry_run=False):
+    """pip install -e a local path."""
+    pip = shutil.which("pip3") or shutil.which("pip")
+    if not pip:
+        warn("pip not found — skip pip install")
+        return False
+    if dry_run:
+        info(f"[dry-run] Would run: {pip} install -e {path}")
+        return True
+    run([pip, "install", "-e", str(path)])
+    return True
+
+def _symlink(target, name, dry_run=False):
+    """Symlink target to ~/.local/bin/{name}."""
+    local_bin = Path.home() / ".local" / "bin"
+    link = local_bin / name
+    if link.exists() or link.is_symlink():
+        return True
+    if dry_run:
+        info(f"[dry-run] Would symlink: {link} → {target}")
+        return True
+    local_bin.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(target)
+    info(f"Symlinked: {link}")
+    return True
+
+
+def ensure_lean_ctx(vars, dry_run=False):
+    """Ensure lean-ctx binary is installed."""
+    if shutil.which("lean-ctx"):
+        return
+    step("Dev tool: lean-ctx")
+    if dry_run:
+        info("[dry-run] Would run install script")
+        return
+    info("Installing lean-ctx...")
+    try:
+        run(["curl", "-fsSL",
+             "https://raw.githubusercontent.com/nicerpc/lean-ctx/main/install.sh"],
+            check=False)
+        warn("Install script may require manual steps. See: https://github.com/nicerpc/lean-ctx")
+    except FileNotFoundError:
+        warn("curl not available. Install lean-ctx manually.")
+
+def ensure_glab(vars, dry_run=False):
+    """Ensure glab (GitLab CLI) is installed."""
+    if shutil.which("glab"):
+        return
+    step("Dev tool: glab (GitLab CLI)")
+    if dry_run:
+        info("[dry-run] Would run: brew install glab")
+        return
+    if not shutil.which("brew"):
+        warn("Homebrew not found — install glab manually: brew install glab")
+        return
+    try:
+        run(["brew", "install", "glab"])
+    except subprocess.CalledProcessError:
+        warn("glab install failed. Retry: brew install glab")
+
+def ensure_git_review_cli(vars, dry_run=False):
+    """Install git-review-cli via pip."""
+    if shutil.which("git-review-cli"):
+        return
+    step("Dev tool: git-review-cli")
+    if dry_run:
+        info("[dry-run] Would pip install git-review-cli")
+        return
+    try:
+        _pip_install(REPOS["git-review-cli"], dry_run)
+    except Exception as e:
+        warn(f"git-review-cli install failed: {e}")
+        info("Manual: pip3 install git+https://github.com/vianhanif/git-review-cli.git")
+
+def ensure_opencode_session(vars, dry_run=False):
+    """Clone opencode-session-viewer and symlink."""
+    if shutil.which("opencode-session"):
+        return
+    step("Dev tool: opencode-session")
+    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
+    dest = projects_dir / "codes" / "opencode-session-viewer"
+
+    if dest.exists() and (dest / "opencode-session.py").exists():
+        _symlink(dest / "opencode-session.py", "opencode-session", dry_run)
+        return
+
+    if dry_run:
+        info(f"[dry-run] Would clone to {dest} and symlink")
+        return
+
+    _clone_repo(REPOS["opencode-session"], dest, dry_run)
+    script = dest / "opencode-session.py"
+    if script.exists():
+        _symlink(script, "opencode-session", dry_run)
+        info("opencode-session installed")
+
+def ensure_kubectl_multi_logs(vars, dry_run=False):
+    """Clone kubectl-multi-logs and install."""
+    if shutil.which("kubectl-multi-logs"):
+        return
+    step("Dev tool: kubectl-multi-logs")
     projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
     dest = projects_dir / "codes" / "kubectl-multi-logs"
 
     if dest.exists() and (dest / "kubectl-multi-logs").exists():
-        info(f"kubectl-multi-logs already installed at {dest}")
+        _symlink(dest / "kubectl-multi-logs", "kubectl-multi-logs", dry_run)
         return
 
     if dry_run:
-        info(f"[dry-run] Would clone to {dest}")
+        info(f"[dry-run] Would clone to {dest}, pip install, and symlink")
         return
 
-    if not shutil.which("git"):
-        warn("git not found — cannot clone kubectl-multi-logs")
+    _clone_repo(REPOS["kubectl-multi-logs"], dest, dry_run)
+    if (dest / "setup.py").exists() or (dest / "pyproject.toml").exists():
+        _pip_install(dest, dry_run)
+    script = dest / "kubectl-multi-logs"
+    if script.exists():
+        _symlink(script, "kubectl-multi-logs", dry_run)
+
+def ensure_bruno_collections(vars, dry_run=False):
+    """Clone Bruno collections from config."""
+    raw = vars.get("BRUNO_COLLECTIONS", "")
+    if not raw:
         return
 
-    dest.parent.mkdir(parents=True, exist_ok=True)
+    import json as _json
     try:
-        run(["git", "clone", "--depth", "1", KUBECTL_MULTI_LOGS_REPO, str(dest)])
-        info(f"Cloned kubectl-multi-logs to {dest}")
+        collections = _json.loads(raw) if isinstance(raw, str) else raw
+    except _json.JSONDecodeError:
+        warn("BRUNO_COLLECTIONS is not valid JSON — skipping")
+        return
 
-        # Install Python package
-        pip = shutil.which("pip3") or shutil.which("pip")
-        if pip:
-            run([pip, "install", "-e", str(dest)])
-            info("Installed kubectl-multi-logs Python package")
-        else:
-            warn("pip not found — kubectl-multi-logs cloned but not installed as a package")
-            info("Run: pip3 install -e {dest}")
+    if not isinstance(collections, list):
+        collections = [collections]
 
-        # Symlink to ~/.local/bin
-        local_bin = Path.home() / ".local" / "bin"
-        local_bin.mkdir(parents=True, exist_ok=True)
-        symlink = local_bin / "kubectl-multi-logs"
-        if not symlink.exists():
-            symlink.symlink_to(dest / "kubectl-multi-logs")
-            info(f"Symlinked: {symlink}")
+    step("Bruno collections")
+    projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
+    base = projects_dir / "bruno" / "collections"
 
-    except subprocess.CalledProcessError as e:
-        warn(f"Failed to install kubectl-multi-logs: {e}")
-    except OSError as e:
-        warn(f"Symlink failed (try manual): {e}")
+    for col in collections:
+        name = col.get("name", col.get("repo", "unknown"))
+        repo = col.get("repo", "")
+        subdir = col.get("subdir", "")
+        if not repo:
+            continue
+        dest = base / name
+        if dest.exists():
+            info(f"Collection '{name}' already exists at {dest}")
+            continue
+        if dry_run:
+            info(f"[dry-run] Would clone {repo} to {dest}")
+            continue
+        try:
+            _clone_repo(repo, dest, dry_run)
+        except Exception as e:
+            warn(f"Failed to clone collection '{name}': {e}")
 
 
 # ── OpenCode config deployment ──
@@ -546,7 +674,11 @@ def print_summary(vars):
     print("       export CONTEXT7_API_KEY='...'")
     print("       export FIRECRAWL_API_KEY='...'")
     print("    4. Restart opencode to load new config")
-    print("    5. Test multilogs: multilogs --help")
+    print("    5. If using git-review-cli, authenticate glab:")
+    print("       glab auth login  # or set GITLAB_TOKEN")
+    print("    6. Test multilogs: multilogs --help")
+    print("    7. If Bruno collections were cloned, open Bruno and")
+    print("       add the collection directories as workspaces")
     print()
     print(f"  Config used:")
     for key in ("PROJECTS_DIR", "GITLAB_ORG", "METABASE_URL"):
@@ -607,7 +739,12 @@ def main():
 
     # Phase 4: Dev tools
     if not args.skip_tools:
-        ensure_dev_tools(vars, args.dry_run)
+        ensure_lean_ctx(vars, args.dry_run)
+        ensure_glab(vars, args.dry_run)
+        ensure_git_review_cli(vars, args.dry_run)
+        ensure_opencode_session(vars, args.dry_run)
+        ensure_kubectl_multi_logs(vars, args.dry_run)
+        ensure_bruno_collections(vars, args.dry_run)
 
     # Phase 5: App configs
     if not args.skip_app_configs:

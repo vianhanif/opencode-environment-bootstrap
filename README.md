@@ -21,6 +21,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 |-------|------|-------|
 | **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, lean-ctx plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
+| **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Optional — installed when `--skip-tools` not passed |
 | **Zed** | Settings, keymap, lean-ctx rules | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
@@ -47,6 +48,7 @@ python3 installer.py
 --config FILE        JSON/YAML config file with variables
 --skip-opencode      Skip opencode config deployment
 --skip-shell         Skip shell config deployment
+--skip-tools         Skip dev tool installation (lean-ctx, glab, git-review-cli, etc.)
 --skip-apps          Skip app installations (brew cask)
 --skip-app-configs   Skip app config deployments
 --force              Overwrite without confirmation
@@ -66,6 +68,8 @@ Set these via environment variables or a JSON/YAML config file:
 | `METABASE_URL` | Metabase instance URL | No |
 | `METABASE_USER` | Metabase username | No |
 | `METABASE_PASS` | Metabase password | No |
+| `GITLAB_ORG` | GitLab organization for MR workflows | No |
+| `BRUNO_COLLECTIONS` | JSON array: `[{"name":"X","repo":"git@...","subdir":"dir"}]` | No |
 
 Example config file:
 
@@ -91,8 +95,9 @@ python3 installer.py --config my-config.json
 4. **Backup** — No existing config to back up
 5. **Deploy** — Writes all config files to their locations
 6. **Shell** — Appends a sourcing block to `~/.zshrc` (idempotent, detects and replaces its own block)
-7. **Verify** — Confirms key files exist
-8. **Done** — You `source ~/.zshrc` and add secrets to `~/.zsh/exports.zsh`
+7. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
+8. **Verify** — Confirms key files exist
+9. **Done** — You `source ~/.zshrc`, authenticate `glab auth login`, and add secrets to `~/.zsh/exports.zsh`
 
 ### Re-run (sync updates)
 
@@ -120,9 +125,11 @@ python3 installer.py --config my-config.json
 - **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
 - **Kubernetes aliases and port-forwards** — These are organization-specific. The template ships generic git/docker aliases and `pod-app-list` only.
 - **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
-- **[kubectl-multi-logs](https://github.com/vianhanif/kubectl-multi-logs)** — The `multilogs` function is included but requires this tool. Install it separately or clone to `$PROJECTS_DIR/codes/kubectl-multi-logs/`.
-- **Bruno collections and environments** — These contain API keys and service URLs. Clone or copy them separately.
-- **Personal tool documentation** — The AGENTS.md template excludes docs for `git-review-cli`, `opencode-session`, and similar personal tools. Add your own under a `## Local Tools` section.
+- **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
+- **GitLab authentication** — `glab auth login` or `GITLAB_TOKEN` must be set for git-review-cli and Bruno collection cloning.
+- **Kubernetes context** — `kubectl` must already be installed and authenticated for multilogs and pod-app-list to work.
+- **Bruno environments** — Contains API keys and service URLs. Copy or configure separately after cloning collections.
+- **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
 
 ## Development
 
