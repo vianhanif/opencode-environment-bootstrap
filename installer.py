@@ -497,7 +497,7 @@ def deploy_opencode_config(vars, dry_run=False):
                 rel = f.relative_to(src_dir)
                 dst = opencode_dir / rel
                 print(f"  [dry-run] {dst}")
-        return
+        return None
 
     # Remove existing (backup was already made) and re-create
     if opencode_dir.exists():
@@ -515,6 +515,7 @@ def deploy_opencode_config(vars, dry_run=False):
         info(str(dst))
 
     info("OpenCode config deployed")
+    return backup
 
 
 # ── Shell config deployment ──
@@ -661,7 +662,7 @@ def verify_deployment(vars, dry_run=False):
 
 # ── Summary ──
 
-def print_summary(vars):
+def print_summary(vars, backup=None):
     """Print post-installation summary."""
     print()
     print("=" * 56)
@@ -686,9 +687,10 @@ def print_summary(vars):
         val = vars.get(key, "")
         if val:
             print(f"    {key}={val}")
-    print()
-    print(f"  Backup (if any): ~/.config/opencode/backup-*")
-    print(f"  Docs: https://github.com/vianhanif/opencode-environment-bootstrap")
+    if backup:
+        print(f"\n  Previous config backed up to:")
+        print(f"    {backup}")
+    print(f"\n  Docs: https://github.com/vianhanif/opencode-environment-bootstrap")
 
 
 # ── Main ──
@@ -730,9 +732,10 @@ def main():
         ensure_apps(vars, args.dry_run)
 
     # Phase 2: Install opencode CLI
+    backup = None
     if not args.skip_opencode:
         ensure_opencode(vars, args.dry_run)
-        deploy_opencode_config(vars, args.dry_run)
+        backup = deploy_opencode_config(vars, args.dry_run)
 
     # Phase 3: Shell config
     if not args.skip_shell:
@@ -756,7 +759,7 @@ def main():
 
     # Summary
     if not args.dry_run:
-        print_summary(vars)
+        print_summary(vars, backup)
 
 
 if __name__ == "__main__":
