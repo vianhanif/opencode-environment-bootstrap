@@ -123,13 +123,13 @@
     },
     "coder": {
       "description": "Implement code changes incrementally per task documentation",
-      "mode": "subagent",
+      "mode": "all",
       "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./skills/coder/SKILL.md}"
     },
     "reviewer": {
       "description": "Review diffs for correctness, risks, and consistency",
-      "mode": "subagent",
+      "mode": "all",
       "model": "opencode-go/deepseek-v4-pro",
       "prompt": "{file:./skills/reviewer/SKILL.md}",
       "permission": {
@@ -139,7 +139,7 @@
     },
     "tester": {
       "description": "Execute test plans and verify behavior",
-      "mode": "subagent",
+      "mode": "all",
       "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./skills/tester/SKILL.md}",
       "permission": {

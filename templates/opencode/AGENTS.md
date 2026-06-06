@@ -53,7 +53,7 @@ Annotate tasks with role prefixes to delegate to role-specific subagents. The pa
 | `@tester` | Tester | task(subagent_type: "tester") |
 | `@analyzer` | Analyzer | task(subagent_type: "analyzer") |
 
-Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@planner` and `@analyzer` (`mode: "all"`) can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`. `@coder`, `@reviewer`, and `@tester` (`mode: "subagent"`) can only be used in delegation.
+Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. All five agents (`@planner`, `@coder`, `@reviewer`, `@tester`, `@analyzer`) have `mode: "all"` so they can be used both as primary agents (via `/agent <name>`) and as subagents (via delegation).
 
 **Dependency rules:**
 - `@result` before a role = depends on ALL preceding annotated tasks since the last `@result`
