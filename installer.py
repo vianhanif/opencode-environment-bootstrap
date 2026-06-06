@@ -371,7 +371,7 @@ def ensure_glab(vars, dry_run=False):
         warn("glab install failed. Retry: brew install glab")
 
 def ensure_git_review_cli(vars, dry_run=False):
-    """Install git-review-cli via pip."""
+    """Install git-review-cli via pip and symlink to ~/.local/bin."""
     if shutil.which("git-review-cli"):
         return
     step("Dev tool: git-review-cli")
@@ -383,6 +383,11 @@ def ensure_git_review_cli(vars, dry_run=False):
     except Exception as e:
         warn(f"git-review-cli install failed: {e}")
         info("Manual: pip3 install git+https://github.com/vianhanif/git-review-cli.git")
+        return
+    # Symlink to ~/.local/bin in case pip installed it off PATH
+    pip_path = shutil.which("git-review-cli")
+    if pip_path:
+        _symlink(Path(pip_path), "git-review-cli", dry_run)
 
 def ensure_opencode_session(vars, dry_run=False):
     """Clone opencode-session-viewer and symlink."""
