@@ -47,13 +47,13 @@ Annotate tasks with role prefixes to delegate to role-specific subagents. The pa
 
 | Annotation | Role | Delegates via |
 |-----------|------|--------------------------------------|
-| `@plan` | Planner | task(subagent_type: "planner") |
-| `@code` | Coder | task(subagent_type: "coder") |
-| `@review` | Reviewer | task(subagent_type: "reviewer") |
-| `@test` | Tester | task(subagent_type: "tester") |
-| `@analyze` | Analyzer | task(subagent_type: "analyzer") |
+| `@planner` | Planner | task(subagent_type: "planner") |
+| `@coder` | Coder | task(subagent_type: "coder") |
+| `@reviewer` | Reviewer | task(subagent_type: "reviewer") |
+| `@tester` | Tester | task(subagent_type: "tester") |
+| `@analyzer` | Analyzer | task(subagent_type: "analyzer") |
 
-Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@plan` and `@analyze` can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`.
+Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. Tasks delegated via `@planner` and `@analyzer` can also be invoked directly as primary agents via `/agent planner` or `/agent analyzer`.
 
 **Dependency rules:**
 - `@result` before a role = depends on ALL preceding annotated tasks since the last `@result`
@@ -69,16 +69,16 @@ Each custom agent is defined in `opencode.json` with its own model, system promp
 
 Sequential three-step:
 ```
-@plan implement go-task-orbit into core, replacing existing worker
-@result @code make changes in branch refactor-worker
-@result @review review the changes against main
+@planner implement go-task-orbit into core, replacing existing worker
+@result @coder make changes in branch refactor-worker
+@result @reviewer review the changes against main
 ```
 
 Parallel + sequential:
 ```
-@code fix payment timeout bug
-@code add logging to notification service
-@result @test verify both changes
+@coder fix payment timeout bug
+@coder add logging to notification service
+@result @tester verify both changes
 ```
 
 Use the `/delegate` command to trigger this workflow.
