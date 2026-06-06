@@ -705,7 +705,10 @@ def restore_snapshot(path, dry_run=False):
     count = 0
     with zipfile.ZipFile(snap) as zf:
         for name in zf.namelist():
-            if name.endswith("/") or name.startswith("__MACOSX") or name.startswith("."):
+            if name.endswith("/") or name.startswith("__MACOSX"):
+                continue
+            basename = name.rstrip("/").split("/")[-1]
+            if basename.startswith("."):
                 continue
             dst = Path.home() / name
             dst.parent.mkdir(parents=True, exist_ok=True)
