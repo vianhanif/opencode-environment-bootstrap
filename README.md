@@ -21,7 +21,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 |-------|------|-------|
 | **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, lean-ctx plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
-| **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Optional — installed when `--skip-tools` not passed |
+| **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
 | **Zed** | Settings, keymap, lean-ctx rules | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
@@ -89,13 +89,13 @@ python3 installer.py --config my-config.json
 
 ### First run (fresh machine)
 
-1. **Homebrew** — Installs `zed`, `ghostty`, `bruno` casks (skipped if present)
-2. **OpenCode CLI** — Runs the official installer from `opencode.ai`
-3. **Prompts** — Asks for API keys and project directory (skipped with `--force`)
-4. **Backup** — No existing config to back up
-5. **Deploy** — Writes all config files to their locations
-6. **Shell** — Appends a sourcing block to `~/.zshrc` (idempotent, detects and replaces its own block)
-7. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
+1. **Prompts** — Asks for API keys and project directory (skipped with `--force`)
+2. **Homebrew** — Installs `zed`, `ghostty`, `bruno` casks (skipped if present)
+3. **OpenCode CLI** — Runs the official installer from `opencode.ai`
+4. **OpenCode config** — Backs up any existing `~/.config/opencode/`, then deploys agents, skills, commands, plugins, MCPs, and workflow rules
+5. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
+6. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
+7. **App configs** — Deploys Zed, Ghostty, and Bruno configuration
 8. **Verify** — Confirms key files exist
 9. **Done** — You `source ~/.zshrc`, authenticate `glab auth login`, and add secrets to `~/.zsh/exports.zsh`
 
@@ -111,24 +111,29 @@ python3 installer.py --config my-config.json
 |------|-----------|----------|
 | `~/.config/opencode/opencode.json` | **Yes** | Restore from backup |
 | `~/.config/opencode/AGENTS.md` | **Yes** | Restore from backup |
+| `~/.config/opencode/package.json` | **Yes** | Restore from backup |
+| `~/.config/opencode/.gitignore` | **Yes** | Restore from backup |
 | `~/.config/opencode/skills/*` | **Yes** | Restore from backup |
 | `~/.config/opencode/commands/*` | **Yes** | Restore from backup |
-| `~/.zsh/aliases/*` | **Yes** | Restore from backup (if you had custom aliases) |
+| `~/.config/opencode/plugins/*` | **Yes** | Restore from backup |
+| `~/.zsh/aliases/*` | **Yes** | Restore from backup |
+| `~/.zsh/functions/*` | **Yes** | Restore from backup |
+| `~/.zsh/completions/_kubectl` | **Yes** | Restore from backup |
+| `~/.zsh/lazyload.zsh` | **Yes** | Restore from backup |
 | `~/.zsh/exports.zsh` | **Yes** | **Your API keys are here** — restore before sourcing |
 | `~/.zshrc` | **Appended to, not replaced** | The sourcing block is replaced in-place |
 | `~/.config/zed/settings.json` | **Yes** | Restore from backup |
+| `~/.config/zed/keymap.json` | **Yes** | Restore from backup |
+| `~/.config/zed/rules/lean-ctx.md` | **Yes** | Restore from backup |
 | `~/.config/ghostty/config` | **Yes** | Restore from backup |
 | `~/Library/Application Support/Bruno/preferences.json` | **Yes** | Restore from backup |
 
 ### What is NOT included (you add these yourself)
 
 - **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
-- **Kubernetes aliases and port-forwards** — These are organization-specific. The template ships generic git/docker aliases and `pod-app-list` only.
-- **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
-- **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
-- **GitLab authentication** — `glab auth login` or `GITLAB_TOKEN` must be set for git-review-cli and Bruno collection cloning.
-- **Kubernetes context** — `kubectl` must already be installed and authenticated for multilogs and pod-app-list to work.
+- **GitLab authentication** — `glab auth login` or `GITLAB_TOKEN` must be set for `git-review-cli` and Bruno collection cloning.
 - **Bruno environments** — Contains API keys and service URLs. Copy or configure separately after cloning collections.
+- **Kubernetes context** — `kubectl` must already be installed and authenticated for `multilogs` and `pod-app-list` to work.
 - **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
 
 ## Development
@@ -149,11 +154,11 @@ The project is structured as:
 bootstrap.sh       ← Bash entry point, downloads and runs installer
 installer.py       ← Python installer, reads templates/ and deploys
 templates/         ← Mirror of target file structure, uses $VAR substitution
-  opencode/        → ~/.config/opencode/
-  shell/           → ~/.zsh/
-  zed/             → ~/.config/zed/
-  ghostty/         → ~/.config/ghostty/
-  bruno/           → ~/Library/Application Support/Bruno/
+  opencode/        → ~/.config/opencode/  (config, skills, commands, plugins, AGENTS.md)
+  shell/           → ~/.zsh/              (aliases, functions, completions, exports, lazyload)
+  zed/             → ~/.config/zed/       (settings, keymap, lean-ctx rules)
+  ghostty/         → ~/.config/ghostty/   (terminal config)
+  bruno/           → ~/Library/Application Support/Bruno/ (preferences)
 ```
 
 Template files use Python `string.Template` syntax (`$VAR`). Variables are substituted at deploy time from environment variables, a config file, or interactive prompts. No external Python dependencies — stdlib only.
