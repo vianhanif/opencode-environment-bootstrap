@@ -20,7 +20,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 | Layer | What | Files |
 |-------|------|-------|
 | **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, lean-ctx plugin | `~/.config/opencode/` |
-| **Shell** | Zsh aliases (git, docker, general), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
+| **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Zed** | Settings, keymap, lean-ctx rules | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
@@ -118,10 +118,11 @@ python3 installer.py --config my-config.json
 ### What is NOT included (you add these yourself)
 
 - **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install.
-- **Kubernetes aliases and port-forwards** — These are organization-specific. The template ships generic git/docker aliases only.
+- **Kubernetes aliases and port-forwards** — These are organization-specific. The template ships generic git/docker aliases and `pod-app-list` only.
 - **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
+- **[kubectl-multi-logs](https://github.com/vianhanif/kubectl-multi-logs)** — The `multilogs` function is included but requires this tool. Install it separately or clone to `$PROJECTS_DIR/codes/kubectl-multi-logs/`.
 - **Bruno collections and environments** — These contain API keys and service URLs. Clone or copy them separately.
-- **Personal tool documentation** — The AGENTS.md template excludes docs for `git-review-cli`, `multilogs`, `opencode-session`, and similar personal tools. Add your own under a `## Local Tools` section.
+- **Personal tool documentation** — The AGENTS.md template excludes docs for `git-review-cli`, `opencode-session`, and similar personal tools. Add your own under a `## Local Tools` section.
 
 ## Development
 

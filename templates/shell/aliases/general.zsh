@@ -10,3 +10,6 @@ alias check-size="du -sh *"
 
 # Local services (Homebrew)
 alias svc="brew services list"
+
+# Kubernetes helpers
+alias pod-app-list="kubectl get pods -o jsonpath='{.items[*].metadata.labels.app}' | tr ' ' '\n' | sort | uniq"
