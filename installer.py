@@ -28,7 +28,6 @@ Config variables (env vars or config file):
   METABASE_URL       Metabase instance URL            (optional)
   METABASE_USER      Metabase username                 (optional)
   METABASE_PASS      Metabase password                 (optional)
-  GITLAB_ORG         GitLab org for MR workflows       (optional)
   BRUNO_COLLECTIONS  JSON array of {name, repo, subdir} (optional)
 
 Examples:
@@ -91,7 +90,6 @@ def resolve_variables(args):
     # Defaults
     defaults = {
         "PROJECTS_DIR": os.environ.get("PROJECTS_DIR", DEFAULT_PROJECTS),
-        "GITLAB_ORG": os.environ.get("GITLAB_ORG", ""),
         "CONTEXT7_API_KEY": os.environ.get("CONTEXT7_API_KEY", ""),
         "FIRECRAWL_API_KEY": os.environ.get("FIRECRAWL_API_KEY", ""),
         "METABASE_URL": os.environ.get("METABASE_URL", ""),
@@ -684,7 +682,7 @@ def print_summary(vars):
     print("       add the collection directories as workspaces")
     print()
     print(f"  Config used:")
-    for key in ("PROJECTS_DIR", "GITLAB_ORG", "METABASE_URL"):
+    for key in ("PROJECTS_DIR", "METABASE_URL"):
         val = vars.get(key, "")
         if val:
             print(f"    {key}={val}")

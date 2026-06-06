@@ -68,7 +68,6 @@ Set these via environment variables or a JSON/YAML config file:
 | `METABASE_URL` | Metabase instance URL | No |
 | `METABASE_USER` | Metabase username | No |
 | `METABASE_PASS` | Metabase password | No |
-| `GITLAB_ORG` | GitLab organization for MR workflows | No |
 | `BRUNO_COLLECTIONS` | JSON array: `[{"name":"X","repo":"git@...","subdir":"dir"}]` | No |
 
 Example config file:
@@ -78,7 +77,6 @@ Example config file:
   "CONTEXT7_API_KEY": "ctx7sk-...",
   "FIRECRAWL_API_KEY": "fc-...",
   "PROJECTS_DIR": "~/code",
-  "GITLAB_ORG": "my-org",
   "BRUNO_COLLECTIONS": [
     {
       "name": "api-collection",
