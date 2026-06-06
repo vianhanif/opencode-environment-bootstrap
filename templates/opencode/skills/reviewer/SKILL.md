@@ -20,25 +20,32 @@ description: Review diffs for correctness, risks, and consistency.
 ## Pre-Review Setup
 
 ### Fetching the MR
-**PREFERRED for GitLab:** Use `glab` CLI, NOT `gh` (gh is GitHub-only).
+**PREFERRED for GitLab:** Use `git-review-cli`, NOT `gh` (gh is GitHub-only).
 
-#### 1. Locate the project
-All projects live under `~/projects/`:
+#### 1. One-command checkout
+`git-review-cli` fetches the MR diff, checks it out locally, and gives you the branch — all in one step:
+
 ```bash
-ls ~/projects/  # find the right repo
+git-review-cli https://gitlab.com/org/project/-/merge_requests/{MR_NUMBER}
+git-review-cli {MR_NUMBER}  # shorthand when already in the repo
 ```
 
-**IMPORTANT:** Use the `workdir` parameter in bash calls (NOT `cd`) when running git commands in a specific repo. The `cd` command does NOT persist between tool calls.
+Use `--caveman` for a quick review or `--deep` for thorough analysis:
+```bash
+git-review-cli {MR_NUMBER} --caveman  # quick scan
+git-review-cli {MR_NUMBER} --deep     # full analysis
+```
 
-#### 2. Batch independent calls (DO THIS IN PARALLEL)
+#### 2. Batch independent info calls (DO THIS IN PARALLEL)
+After checkout, gather context in parallel:
 ```bash
 # Run ALL of these simultaneously in a single message:
-git log mr-branch --not origin/main --oneline   # commits in MR
-git diff origin/main...mr-branch --stat          # file change summary
-glab mr view {MR_NUMBER} -R {repo}              # MR metadata
-glab api projects/{OWNER}%2F{REPO}/merge_requests/{MR_NUMBER}/notes  # existing reviews
+git log mr-{MR_NUMBER} --not origin/main --oneline   # commits in MR
+git diff origin/main...mr-{MR_NUMBER} --stat          # file change summary
+glab mr view {MR_NUMBER} -R {repo}                    # MR metadata
 ```
-Do NOT run these sequentially — each is independent.
+
+**AVOID:** `webfetch` for GitLab MRs (often returns 403)
 
 #### 3. Verify MR scope (BEFORE deep-dive into diffs)
 **MR description = contract for what's IN scope.** Changelogs document full ticket scope (may span multiple MRs). Never flag a missing changelog item as a bug without first confirming it's in scope for this MR.
@@ -52,26 +59,8 @@ glab mr view {MR_NUMBER} -R {repo}  # read MR description for scope
 - If a changelog item is not in the MR diff → flag as a **question** (not a bug), or don't flag at all if clearly out of scope
 - **Never comment on changes not part of this MR's commits**
 
-#### 4. Fetch and checkout MR branch (RECOMMENDED)
-```bash
-git fetch origin merge-requests/{MR_NUMBER}/head:mr-{MR_NUMBER}
-git checkout mr-{MR_NUMBER}
-```
-
-**Why MR branch over source branch:**
-- Matches exactly what GitLab shows in the MR diff
-- Static snapshot - won't change mid-review
-- Works even if source branch is force-pushed or deleted
-
-**Checkout source branch only when:**
-- Developer explicitly mentions pushing updates since MR was opened
-- You need to collaborate/add commits to their branch
-- Final verification right before merge
-
-**AVOID:** `webfetch` for GitLab MRs (often returns 403)
-
-#### 5. Read full context (not just the diff)
-After checking out, read the **full affected functions**, not just diff lines. Trace relevant functions across the project to understand the complete picture:
+#### 4. Read full context (not just the diff)
+After checkout via `git-review-cli`, read the **full affected functions**, not just diff lines. Trace relevant functions across the project to understand the complete picture:
 - Read the struct definitions referenced in the diff
 - Read how similar validation functions handle errors
 - Read calling functions to understand the flow
@@ -81,15 +70,15 @@ After checking out, read the **full affected functions**, not just diff lines. T
 
 **Tests:** Do not run tests locally if CI pipeline is green. Trust CI, focus on static analysis. Only run tests locally when CI is unavailable or results are ambiguous.
 
-#### 6. Noise file exclusion & file ownership check
+#### 5. Noise file exclusion & file ownership check
 Before presenting findings, validate each one:
 
 ```bash
 # Verify the file was actually touched by an MR commit
-git log mr-branch --not base-branch --oneline -- <filepath>
+git log mr-{MR_NUMBER} --not base-branch --oneline -- <filepath>
 
 # Exclude noise files from diff stats
-git diff base-branch...mr-branch --stat -- '*.js' '*.jsx' '*.py' ':!package-lock.json' ':!yarn.lock'
+git diff base-branch...mr-{MR_NUMBER} --stat -- '*.js' '*.jsx' '*.py' ':!package-lock.json' ':!yarn.lock'
 ```
 
 **Rules:**
@@ -204,7 +193,14 @@ After completing the full review analysis (checklist, file reading, diff analysi
 2. **Ask the user to confirm the verdict** — get explicit go-ahead or adjustments
 3. **Only post after user approves** — use user's final OK to post
 
-Use `glab` CLI to post structured feedback:
+Post the review via `git-review-cli`:
+
+```bash
+# Write review to a file, then post it
+git-review-cli {MR_NUMBER} --post /tmp/review.md
+```
+
+Or post directly via `glab`:
 
 ```bash
 glab mr note {MR_NUMBER} -R {repo} -m "review message"
