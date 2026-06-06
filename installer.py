@@ -16,10 +16,14 @@ Options:
   --skip-opencode     Skip opencode config deployment
   --skip-shell        Skip shell config deployment
   --skip-apps         Skip app installations (brew cask)
+  --skip-app-configs  Skip app config deployments
   --skip-tools        Skip dev tool installations
   --force             Overwrite without confirmation
   --dry-run           Show what would be done
   --verbose           Verbose output
+  --snapshot FILE     Create ZIP snapshot of custom files and exit
+  --restore-snapshot FILE  Restore snapshot after deployment
+  --clean             Remove managed configs before install (fresh machine)
 
 Config variables (env vars or config file):
   PROJECTS_DIR       Code projects location          (default: ~/projects)
@@ -36,7 +40,7 @@ Examples:
   python3 installer.py --config my-config.json
 """
 
-import os, sys, json, shutil, subprocess, datetime, re, stat
+import os, sys, json, shutil, subprocess, datetime, re, stat, zipfile
 from pathlib import Path
 from string import Template
 
@@ -495,7 +499,6 @@ def deploy_opencode_config(vars, dry_run=False):
 
     # Deploy
     if dry_run:
-        # Just show files
         for f in sorted(src_dir.rglob("*")):
             if f.is_file():
                 rel = f.relative_to(src_dir)
@@ -503,7 +506,6 @@ def deploy_opencode_config(vars, dry_run=False):
                 print(f"  [dry-run] {dst}")
         return None
 
-    # Remove existing (backup was already made) and re-create
     if opencode_dir.exists():
         shutil.rmtree(opencode_dir)
     opencode_dir.mkdir(parents=True)
@@ -522,87 +524,46 @@ def deploy_opencode_config(vars, dry_run=False):
     return backup
 
 
-# ── Shell config deployment ──
+# ── Shell config ──
 
 def deploy_shell_config(vars, dry_run=False):
-    """Deploy shell config and update .zshrc."""
+    """Deploy shell config files."""
     step("Shell configuration")
 
-    zsh_dir = Path.home() / ".zsh"
     src_dir = TEMPLATES_DIR / "shell"
+    dst_root = Path.home() / ".zsh"
+
+    if not src_dir.exists():
+        info("No shell templates found — skipping")
+        return
+
+    deploy_tree(src_dir, dst_root, vars, dry_run=dry_run)
+
+    # Add sourcing block to .zshrc
     zshrc = Path.home() / ".zshrc"
-
-    # Deploy zsh config files
-    if src_dir.exists():
-        if dry_run:
-            for f in sorted(src_dir.rglob("*")):
-                if f.is_file():
-                    rel = f.relative_to(src_dir)
-                    print(f"  [dry-run] {zsh_dir / rel}")
-        else:
-            zsh_dir.mkdir(parents=True, exist_ok=True)
-            for f in sorted(src_dir.rglob("*")):
-                if not f.is_file():
-                    continue
-                rel = f.relative_to(src_dir)
-                dst = zsh_dir / rel
-                deploy_file(f, dst, vars)
-                info(f"shell/{rel}")
-    else:
-        info("No shell templates — skipping")
-
-    # Update .zshrc (idempotent)
     if dry_run:
-        if zshrc.exists() and ZSH_SOURCING_HEADER not in zshrc.read_text():
+        if zshrc.exists():
             print(f"  [dry-run] Would add sourcing block to {zshrc}")
-        elif not zshrc.exists():
-            print(f"  [dry-run] Would create {zshrc}")
-        return
-
-    if not zshrc.exists():
-        zshrc.write_text(f"""# Zsh config — managed by opencode-bootstrap
-{generate_zshrc_block(vars)}
-""")
-        info(f"Created {zshrc}")
-        return
-
-    content = zshrc.read_text()
-    if ZSH_SOURCING_HEADER in content:
-        # Replace existing block
-        pattern = re.compile(
-            rf"{re.escape(ZSH_SOURCING_HEADER)}.*?{re.escape(ZSH_SOURCING_FOOTER)}",
-            re.DOTALL,
-        )
-        if pattern.search(content):
-            content = pattern.sub(generate_zshrc_block(vars), content)
-            zshrc.write_text(content)
-            info(f"Updated sourcing block in {zshrc}")
         else:
-            warn("Sourcing header found but footer missing — appending new block")
-            zshrc.write_text(content.rstrip() + "\n\n" + generate_zshrc_block(vars) + "\n")
-    else:
-        zshrc.write_text(content.rstrip() + "\n\n" + generate_zshrc_block(vars) + "\n")
+            print(f"  [dry-run] Would create {zshrc} with sourcing block")
+        return
+
+    if not zshrc.exists() or ZSH_SOURCING_HEADER not in zshrc.read_text():
+        with zshrc.open("a" if zshrc.exists() else "w") as f:
+            if zshrc.exists():
+                f.write("\n")
+            f.write(f"\n{ZSH_SOURCING_HEADER}\n")
+            f.write(f'for f in "$HOME/.zsh/aliases"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n')
+            f.write(f'for f in "$HOME/.zsh/functions"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n')
+            f.write(f'[[ -f "$HOME/.zsh/exports.zsh" ]] && source "$HOME/.zsh/exports.zsh"\n')
+            f.write(f'[[ -f "$HOME/.zsh/lazyload.zsh" ]] && source "$HOME/.zsh/lazyload.zsh"\n')
+            f.write(f'{ZSH_SOURCING_FOOTER}\n')
         info(f"Added sourcing block to {zshrc}")
 
 
-def generate_zshrc_block(vars):
-    """Generate the .zshrc sourcing section."""
-    return f"""{ZSH_SOURCING_HEADER}
-export OPCODE_PROJECTS_DIR="{vars.get('PROJECTS_DIR', DEFAULT_PROJECTS)}"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.opencode/bin:$PATH"
-[[ -f ~/.zsh/exports.zsh ]] && source ~/.zsh/exports.zsh
-for file in ~/.zsh/aliases/*.zsh; do [[ -f "$file" ]] && source "$file"; done
-for file in ~/.zsh/functions/*.zsh; do [[ -f "$file" ]] && source "$file"; done
-[[ -f ~/.zsh/lazyload.zsh ]] && source ~/.zsh/lazyload.zsh
-{ZSH_SOURCING_FOOTER}"""
-
-
-# ── App config deployment (Zed, Ghostty, Bruno) ──
-
 APP_CONFIG_MAP = {
-    "zed":     (".config/zed",                  TEMPLATES_DIR / "zed"),
-    "ghostty": (".config/ghostty",              TEMPLATES_DIR / "ghostty"),
+    "zed":     (".config/zed",         TEMPLATES_DIR / "zed"),
+    "ghostty": (".config/ghostty",     TEMPLATES_DIR / "ghostty"),
     "bruno":   ("Library/Application Support/Bruno", TEMPLATES_DIR / "bruno"),
 }
 
@@ -633,40 +594,7 @@ def deploy_app_configs(vars, dry_run=False):
         info(f"{name} config deployed")
 
 
-# ── Verification ──
-
-def verify_deployment(vars, dry_run=False):
-    """Verify that key files were deployed correctly."""
-    if dry_run:
-        return
-
-    step("Verification")
-    checks = [
-        (Path.home() / ".config" / "opencode" / "opencode.json", "OpenCode config"),
-        (Path.home() / ".config" / "opencode" / "AGENTS.md", "OpenCode AGENTS.md"),
-        (Path.home() / ".config" / "opencode" / "skills" / "planner" / "SKILL.md", "Planner skill"),
-        (Path.home() / ".zsh" / "aliases" / "git.zsh", "Shell aliases"),
-        (Path.home() / ".zsh" / "lazyload.zsh", "Lazyload"),
-    ]
-
-    all_ok = True
-    for path, label in checks:
-        if path.exists():
-            info(f"{label}: {path}")
-        else:
-            warn(f"{label}: not found at {path}")
-            all_ok = False
-
-    if all_ok:
-        info("All checks passed")
-    else:
-        warn("Some files were not deployed. Check templates/ directory.")
-    return all_ok
-
-
-# ── Summary ──
-
-def print_summary(vars, backup=None):
+def print_summary(vars, backup=None, args=None):
     """Print post-installation summary."""
     print()
     print("=" * 56)
@@ -697,6 +625,167 @@ def print_summary(vars, backup=None):
     print(f"\n  Docs: https://github.com/vianhanif/opencode-environment-bootstrap")
 
 
+# ── Snapshot ──
+
+SNAPSHOT_DIRS = [
+    Path.home() / ".zsh",
+    Path.home() / ".config" / "zed",
+]
+
+SNAPSHOT_EXCLUDE_PATTERNS = [
+    "prompts/",
+    "__pycache__",
+    "*.pyc",
+]
+
+
+def _snapshot_should_include(path):
+    rel = str(path.relative_to(Path.home())) if path.is_relative_to(Path.home()) else path.name
+    for pat in SNAPSHOT_EXCLUDE_PATTERNS:
+        if pat.endswith("/"):
+            if rel.startswith(pat) or f"/{pat}" in rel:
+                return False
+        elif path.match(pat):
+            return False
+    return True
+
+
+def collect_snapshot_files(vars):
+    """Find all managed local files (not runtime state) for snapshot."""
+    files = []
+    for local_dir in SNAPSHOT_DIRS:
+        if not local_dir.is_dir():
+            continue
+        for f in sorted(local_dir.rglob("*")):
+            if not f.is_file():
+                continue
+            if _snapshot_should_include(f):
+                files.append(f)
+    return files
+
+
+def create_snapshot(path, vars, dry_run=False):
+    """Create a ZIP snapshot of managed config files."""
+    files = collect_snapshot_files(vars)
+    if not files:
+        info("No managed config files found to snapshot")
+        return
+
+    step(f"Snapshot → {path}")
+    if dry_run:
+        for f in files:
+            rel = f.relative_to(Path.home())
+            print(f"  [dry-run] {rel}")
+        return
+
+    n = len(files)
+    total = sum(f.stat().st_size for f in files)
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in files:
+            arcname = str(f.relative_to(Path.home()))
+            zf.write(f, arcname)
+
+    info(f"Snapshot saved: {path} ({n} files, {_fmt_size(total)})")
+
+
+def restore_snapshot(path, dry_run=False):
+    """Restore snapshot ZIP contents to home directory."""
+    step("Restoring snapshot")
+    snap = Path(path)
+    if not snap.exists():
+        warn(f"Snapshot not found: {path}")
+        return
+
+    if dry_run:
+        with zipfile.ZipFile(snap) as zf:
+            for name in zf.namelist():
+                print(f"  [dry-run] ~/{name}")
+        return
+
+    count = 0
+    with zipfile.ZipFile(snap) as zf:
+        for name in zf.namelist():
+            if name.endswith("/") or name.startswith("__MACOSX") or name.startswith("."):
+                continue
+            dst = Path.home() / name
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_bytes(zf.read(name))
+            info(f"  {dst}")
+            count += 1
+
+    info(f"Snapshot restored: {count} files")
+
+
+def _fmt_size(n):
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024:
+            return f"{n:.1f} {unit}"
+        n /= 1024
+    return f"{n:.1f} TB"
+
+
+# ── Clean ──
+
+CLEAN_PATHS = [
+    Path.home() / ".config" / "opencode",
+    Path.home() / ".zsh",
+    Path.home() / ".config" / "zed" / "settings.json",
+    Path.home() / ".config" / "zed" / "keymap.json",
+    Path.home() / ".config" / "zed" / "rules",
+    Path.home() / ".config" / "ghostty" / "config",
+    Path.home() / "Library" / "Application Support" / "Bruno" / "preferences.json",
+]
+
+
+def clean_machine(dry_run=False):
+    """Remove managed config files/dirs to simulate fresh machine."""
+    step("Cleaning machine to fresh state")
+    removed = 0
+    for p in CLEAN_PATHS:
+        if not p.exists():
+            continue
+        if dry_run:
+            print(f"  [dry-run] Would remove: {p}")
+            removed += 1
+            continue
+        if p.is_dir():
+            shutil.rmtree(p)
+        else:
+            p.unlink()
+        info(f"Removed: {p}")
+        removed += 1
+    if removed == 0:
+        info("Nothing to clean")
+    else:
+        info(f"Cleaned {removed} paths")
+
+
+# ── Verification ──
+
+def verify_deployment(vars, dry_run=False):
+    """Verify that key files were deployed correctly."""
+    if dry_run:
+        return
+
+    step("Verification")
+    checks = [
+        (Path.home() / ".config" / "opencode" / "opencode.json", "OpenCode config"),
+        (Path.home() / ".config" / "opencode" / "AGENTS.md", "OpenCode AGENTS.md"),
+        (Path.home() / ".config" / "opencode" / "skills" / "planner" / "SKILL.md", "Planner skill"),
+        (Path.home() / ".zsh" / "aliases" / "git.zsh", "Shell aliases"),
+        (Path.home() / ".zsh" / "lazyload.zsh", "Lazyload"),
+    ]
+    all_ok = True
+    for path, label in checks:
+        if path.exists():
+            info(f"  ✓ {label}: {path}")
+        else:
+            warn(f"  ✗ {label}: {path} not found")
+            all_ok = False
+    if all_ok:
+        info("All checks passed")
+
+
 # ── Main ──
 
 def main():
@@ -716,6 +805,9 @@ def main():
     parser.add_argument("--force", action="store_true", help="Overwrite without confirmation")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be done")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("--snapshot", metavar="FILE", help="Create ZIP snapshot of custom files and exit")
+    parser.add_argument("--restore-snapshot", metavar="FILE", help="Restore snapshot after deployment")
+    parser.add_argument("--clean", action="store_true", help="Remove managed configs before install")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -730,6 +822,16 @@ def main():
                 print(f"  {k}=***")
             else:
                 print(f"  {k}={v}")
+
+    # Snapshot mode: create and exit
+    if args.snapshot:
+        create_snapshot(args.snapshot, vars, args.dry_run)
+        if not args.clean and not args.restore_snapshot:
+            return
+
+    # Clean: wipe managed configs before install
+    if args.clean:
+        clean_machine(args.dry_run)
 
     # Phase 1: Install apps (optional)
     if not args.skip_apps:
@@ -758,12 +860,16 @@ def main():
     if not args.skip_app_configs:
         deploy_app_configs(vars, args.dry_run)
 
-    # Phase 6: Verify
+    # Phase 6: Restore snapshot (after all deployments)
+    if args.restore_snapshot:
+        restore_snapshot(args.restore_snapshot, args.dry_run)
+
+    # Phase 7: Verify
     verify_deployment(vars, args.dry_run)
 
     # Summary
     if not args.dry_run:
-        print_summary(vars, backup)
+        print_summary(vars, backup, args)
 
 
 if __name__ == "__main__":
