@@ -362,12 +362,13 @@ def ensure_lean_ctx(vars, dry_run=False):
         return
     info("Installing lean-ctx...")
     try:
-        run(["curl", "-fsSL",
-             "https://raw.githubusercontent.com/nicerpc/lean-ctx/main/install.sh"],
+        run(["bash", "-c",
+             "curl -fsSL https://raw.githubusercontent.com/yvgude/lean-ctx/main/install.sh | bash"],
             check=False)
-        warn("Install script may require manual steps. See: https://github.com/nicerpc/lean-ctx")
+        if not shutil.which("lean-ctx"):
+            warn("Install script finished but lean-ctx not found in PATH")
     except FileNotFoundError:
-        warn("curl not available. Install lean-ctx manually.")
+        warn("curl not available. Install lean-ctx manually from https://github.com/yvgude/lean-ctx")
 
 def ensure_glab(vars, dry_run=False):
     """Ensure glab (GitLab CLI) is installed."""
