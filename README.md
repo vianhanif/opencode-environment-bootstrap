@@ -7,38 +7,15 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 ```mermaid
 mindmap
   root((AI Engineering Environment))
-    opencode CLI
-      MCP integration
-        context7 -- live docs lookup
-        duckdb -- query databases directly
-        firecrawl -- scrape & search the web
-        mermaid -- generate diagrams on the fly
-        metabase -- analytics from chat
-        sequential-thinking -- structured reasoning
-        serena -- codebase indexing & navigation
-        lean-ctx -- context compression for AI
-      Custom agents
-        plan -- research & document before coding
-        code -- implement incrementally
-        review -- catch bugs & regressions
-        test -- verify behavior
-        analyze -- root cause investigation
-    Zed editor
-      Fast startup & Vim mode
-      lean-ctx rules for AI context
-      Multi-cursor, LSP, inline diagnostics
-    Ghostty terminal
-      GPU-accelerated rendering
-      Dracula theme & word-navigation
-    Bruno API client
-      Offline-first, no account needed
-      Git-synced collections
-    Shell & CLI tools
-      glab -- GitLab from the terminal
-      git-review-cli -- one-command MR reviews
-      opencode-session -- browse session history
-      multilogs -- aggregate K8s pod logs
-      pod-app-list -- discover running services
+    opencode CLI -- AI coding with MCPs & custom agents
+    Zed editor -- fast editor with Vim & lean-ctx rules
+    Ghostty terminal -- GPU-accelerated terminal
+    Bruno API client -- offline-first, git-synced collections
+    glab -- GitLab CLI for MRs & project management
+    git-review-cli -- one-command automated code reviews
+    lean-ctx -- context compression for AI agents
+    multilogs -- aggregate logs across K8s pods
+    opencode-session -- browse & search session history
 ```
 
 ## Why
