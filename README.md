@@ -19,7 +19,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 | Layer | What | Files |
 |-------|------|-------|
-| **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, lean-ctx plugin | `~/.config/opencode/` |
+| **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin, handoff plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
 | **Zed** | Settings, keymap, lean-ctx rules | `~/.config/zed/` |
@@ -49,7 +49,7 @@ Or clone and run directly:
 ```bash
 git clone https://github.com/vianhanif/opencode-environment-bootstrap.git
 cd opencode-environment-bootstrap
-python3 installer.py
+python3 installer.py --config my-config.json
 ```
 
 ### Snapshot → Clean → Redeploy
@@ -124,23 +124,20 @@ Example config file:
 }
 ```
 
-```bash
-python3 installer.py --config my-config.json
-```
-
-## Awareness: what will happen
+## What happens
 
 ### First run (fresh machine)
 
 1. **Prompts** — Asks for API keys and project directory (skipped with `--force`)
-2. **Homebrew** — Installs `zed`, `ghostty`, `bruno` casks (skipped if present)
-3. **OpenCode CLI** — Runs the official installer from `opencode.ai`
-4. **OpenCode config** — Backs up any existing `~/.config/opencode/`, then deploys agents, skills, commands, plugins, MCPs, and workflow rules
-5. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
-6. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
-7. **App configs** — Deploys Zed, Ghostty, and Bruno configuration
-8. **Verify** — Confirms key files exist
-9. **Done** — You `source ~/.zshrc`, authenticate `glab auth login`, and add secrets to `~/.zsh/exports.zsh`
+2. **Homebrew** — Installs `zed`, `ghostty`, `bruno` casks (skipped with `--skip-apps` or if already present)
+3. **MCP runtimes** — Checks for `npx` (Node.js), `uvx`, and `serena`; installs missing ones via Homebrew
+4. **OpenCode CLI** — Runs the official installer from `opencode.ai`
+5. **OpenCode config** — Backs up any existing `~/.config/opencode/`, then deploys agents, skills, commands, plugins, MCPs, and workflow rules
+6. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
+7. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
+8. **App configs** — Deploys Zed, Ghostty, and Bruno configuration (skipped with `--skip-app-configs`)
+9. **Verify** — Confirms key files exist
+10. **Done** — You `source ~/.zshrc`, authenticate `glab auth login`, and add secrets to `~/.zsh/exports.zsh`
 
 ### Re-run (sync updates)
 
@@ -153,7 +150,7 @@ python3 installer.py --config my-config.json
 Removes everything the bootstrap manages, but **leaves apps installed**:
 
 - OpenCode config (`~/.config/opencode/`)
-- Shell dotfiles (`~/.zsh/`, `--zshrc` sourcing block)
+- Shell dotfiles (`~/.zsh/`, `.zshrc` sourcing block)
 - App configs (zed settings/keymap/rules, ghostty config, Bruno app support)
 - Dev tool symlinks (`kubectl-multi-logs`, `opencode-session`, `lean-ctx`)
 - Bruno collections and cloned tool repos (`opencode-session-viewer`)
@@ -169,7 +166,6 @@ Shows a full list of what will be removed and prompts `[y/N]` before executing. 
 | `~/.config/opencode/opencode.json` | **Yes** | Restore from backup |
 | `~/.config/opencode/AGENTS.md` | **Yes** | Restore from backup |
 | `~/.config/opencode/package.json` | **Yes** | Restore from backup |
-| `~/.config/opencode/.gitignore` | **Yes** | Restore from backup |
 | `~/.config/opencode/skills/*` | **Yes** | Restore from backup |
 | `~/.config/opencode/commands/*` | **Yes** | Restore from backup |
 | `~/.config/opencode/plugins/*` | **Yes** | Restore from backup |
@@ -185,55 +181,45 @@ Shows a full list of what will be removed and prompts `[y/N]` before executing. 
 | `~/.config/ghostty/config` | **Yes** | Restore from backup |
 | `~/Library/Application Support/Bruno/preferences.json` | **Yes** | Restore from backup |
 
-### What is NOT included (you add these yourself)
+### What is NOT included
 
-- **API keys and secrets** — Context7, Firecrawl, Metabase credentials. Set via env vars or add to `~/.zsh/exports.zsh` after install. Firecrawl MCP is pre-configured with your `FIRECRAWL_API_KEY` from the config file — no manual wiring needed.
+- **API keys** — Context7, Firecrawl, Metabase credentials are set during install (via config file or prompts) and placed in the opencode config and MCP environment fields. No post-install editing needed unless you want to rotate them.
 - **GitLab authentication** — `glab auth login` or `GITLAB_TOKEN` must be set for `git-review-cli` and Bruno collection cloning.
 - **Bruno environments** — Contains API keys and service URLs. Copy or configure separately after cloning collections.
 - **Kubernetes context** — `kubectl` must already be installed and authenticated for `multilogs` and `pod-app-list` to work.
 - **Project-specific aliases** — Add your own in `~/.zsh/aliases/` (the sourcing loop picks up all `*.zsh` files).
 
-### MCP runtime dependencies
+## MCP runtime dependencies
 
 The opencode config includes several MCP servers that depend on external runtimes. The installer checks for these and installs missing ones via Homebrew:
 
-| MCP server | Runtime | Installer action | Notes |
-|------------|---------|------------------|-------|
-| duckdb | `uvx` | `brew install uv` if missing | Always installed |
-| firecrawl, mcp-mermaid, metabase, sequential-thinking | `npx` (Node.js) | `brew install node` if missing | Always installed |
-| serena | `serena` binary | Warns if missing | Optional — install manually via `uv tool install serena-agent` |
-| lean-ctx | `lean-ctx` binary | Runs install script | Installed in Phase 4 (dev tools) |
-| context7 | None (remote) | Not needed | Uses your `CONTEXT7_API_KEY` |
+| MCP server | Runtime | Installer action |
+|------------|---------|------------------|
+| duckdb | `uvx` | `brew install uv` if missing |
+| firecrawl, mcp-mermaid, metabase, sequential-thinking | `npx` (Node.js) | `brew install node` if missing |
+| serena | `serena` binary | Warns if missing (install via `uv tool install serena-agent`) |
+| lean-ctx | `lean-ctx` binary | Runs install script from [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
+| context7 | None (remote) | Not needed |
 
-The check runs after app installations so Homebrew is ready. Use `--skip-apps` to skip brew-based installs — runtimes will still be checked and warned about if missing.
+The check runs after app installations so Homebrew is ready. Use `--skip-apps` to skip brew-based installs — runtimes will still be flagged if missing.
 
 ## Tools & MCP Sources
 
 | Component | Source |
 |-----------|--------|
 | **OpenCode** CLI | [opencode.ai](https://opencode.ai) |
-| **lean-ctx** context runtime | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
+| **lean-ctx** | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
 | **glab** (GitLab CLI) | [gitlab-org/cli](https://gitlab.com/gitlab-org/cli) |
 | **git-review-cli** | [vianhanif/git-review-cli](https://github.com/vianhanif/git-review-cli) |
-| **opencode-session** viewer | [vianhanif/opencode-session-viewer](https://github.com/vianhanif/opencode-session-viewer) |
+| **opencode-session** | [vianhanif/opencode-session-viewer](https://github.com/vianhanif/opencode-session-viewer) |
 | **kubectl-multi-logs** | [vianhanif/kubectl-multi-logs](https://github.com/vianhanif/kubectl-multi-logs) |
-| **context7** MCP | [upstash/context7](https://github.com/upstash/context7) / [context7.com](https://context7.com) |
-| **duckdb** MCP (`mcp-server-motherduck`) | [motherduckdb/mcp-server-motherduck](https://github.com/motherduckdb/mcp-server-motherduck) |
+| **context7** MCP | [upstash/context7](https://github.com/upstash/context7) |
+| **duckdb** MCP | [motherduckdb/mcp-server-motherduck](https://github.com/motherduckdb/mcp-server-motherduck) |
 | **firecrawl** MCP | [firecrawl/firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server) |
 | **mermaid** MCP | [hustcc/mcp-mermaid](https://github.com/hustcc/mcp-mermaid) |
 | **metabase** MCP | [imlewc/metabase-server](https://github.com/imlewc/metabase-server) |
 | **sequential-thinking** MCP | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) |
-| **serena** code index MCP | [oraios/serena](https://github.com/oraios/serena) |
-
-## Development
-
-```bash
-# Test without modifying anything
-python3 installer.py --dry-run --verbose
-
-# Test with a custom config
-python3 installer.py --dry-run --config my-config.json
-```
+| **serena** MCP | [oraios/serena](https://github.com/oraios/serena) |
 
 ## Design
 
@@ -251,3 +237,13 @@ templates/         ← Mirror of target file structure, uses $VAR substitution
 ```
 
 Template files use Python `string.Template` syntax (`$VAR`). Variables are substituted at deploy time from environment variables, a config file, or interactive prompts. No external Python dependencies — stdlib only.
+
+## Development
+
+```bash
+# Test without modifying anything
+python3 installer.py --dry-run --verbose
+
+# Test with a custom config
+python3 installer.py --dry-run --config my-config.json
+```
