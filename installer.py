@@ -740,9 +740,11 @@ CLEAN_PATHS = [
     Path.home() / ".local" / "bin" / "git-review-cli",
     Path.home() / ".local" / "bin" / "kubectl-multi-logs",
     Path.home() / ".local" / "bin" / "opencode-session",
+    Path.home() / ".local" / "bin" / "lean-ctx",
+    Path.home() / ".config" / "lean-ctx",
 ]
 
-CLEAN_BREW_CASKS = ["zed", "ghostty", "bruno"]
+CLEAN_BREW = ["zed", "ghostty", "bruno", "glab"]
 
 
 def _remove_sourcing_block(zshrc):
@@ -802,22 +804,41 @@ def clean_machine(vars=None, dry_run=False):
             info(f"Removed Bruno collections: {collections_dir}")
             removed += 1
 
-    # 4. Homebrew casks (prompted)
+    # 4. Homebrew (apps + tools)
     if shutil.which("brew") and not dry_run:
-        for cask in CLEAN_BREW_CASKS:
+        for item in CLEAN_BREW:
             result = subprocess.run(
-                ["brew", "list", "--cask", cask],
+                ["brew", "list", item],
                 capture_output=True, text=True,
             )
             if result.returncode != 0:
                 continue
-            answer = input(f"  Uninstall Homebrew cask '{cask}'? [y/N] ").strip().lower()
-            if answer == "y":
-                subprocess.run(["brew", "uninstall", "--cask", cask])
-                info(f"Uninstalled: {cask}")
+            subprocess.run(["brew", "uninstall", item], capture_output=True)
+            info(f"Uninstalled (brew): {item}")
+            removed += 1
+
+    # 5. Python pip packages (git-review-cli, kubectl-multi-logs, opencode-session)
+    if not dry_run:
+        for pkg in ["git-review-cli", "kubectl-multi-logs"]:
+            result = subprocess.run(
+                ["python3", "-m", "pip", "uninstall", "-y", pkg],
+                capture_output=True, text=True,
+            )
+            if result.returncode == 0:
+                info(f"Uninstalled (pip): {pkg}")
+                removed += 1
+
+    # 6. Cloned dev tool repos (opencode-session-viewer)
+    if projects_dir:
+        session_dir = projects_dir / "codes" / "opencode-session-viewer"
+        if session_dir.exists():
+            if dry_run:
+                print(f"  [dry-run] Would remove: {session_dir}")
                 removed += 1
             else:
-                info(f"Skipped: {cask}")
+                shutil.rmtree(session_dir)
+                info(f"Removed: {session_dir}")
+                removed += 1
 
     if removed == 0:
         info("Nothing to clean")
