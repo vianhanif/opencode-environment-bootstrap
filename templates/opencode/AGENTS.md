@@ -150,7 +150,6 @@ MiniMax M2.5/M2.7 has a recurring JSON serialization bug in tool calls:
 - [ ] Perform hidden refactors
 - [ ] Mix planning and coding in one session
 - [ ] No coding without task documentation
-- [ ] No mixed sessions (plan + code in one turn)
 - [ ] No large code dumps (show diffs/snippets only)
 - [ ] Modify test scripts to fix a validation bug — fix the source layer; test scripts are diagnostic tools, not the fix target
 - [ ] Present neutral test results when expected behavior is violated — explicitly flag it as a bug with severity
@@ -165,9 +164,8 @@ MiniMax M2.5/M2.7 has a recurring JSON serialization bug in tool calls:
 - Reconfirm scope if new information changes the task
 
 ### Before Starting on a New Project
-On first use in a project directory, run Serena onboarding to index the codebase:
-- The agent should call `serena_check_onboarding_performed` at session start
-- If not yet onboarded, call `serena_onboarding` and follow the instructions
+If a codebase indexing MCP (e.g., Serena) is configured, run onboarding on first use:
+- Call the indexing tool at session start
 - This enables symbol-level code operations (find_symbol, rename, etc.)
 
 ---
@@ -282,7 +280,7 @@ Use Context7 MCP to fetch current documentation whenever the user asks about a l
 
 ## Skill Files Location
 
-The Skill files are in: `~/.config/opencode/skills`
+Skill files are in: `~/.config/opencode/skills`
 
 Available skills:
 - `planner` - Load for planning sessions
