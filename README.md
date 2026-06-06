@@ -6,26 +6,39 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 
 ```mermaid
 mindmap
-  root((opencode-bootstrap))
-    Fresh machine
-      Install opencode CLI
-      Deploy config & agents
-      Set up shell dotfiles
-      Install dev tools
-      Install apps via brew
-      Configure editor & terminal
-    Sync updates
-      Backup existing config
-      Re-deploy templates
-      Restore custom files
-    Clean rebuild
-      Wipe configs + extras
-      Apps stay installed
-      Re-deploy from scratch
-    Snapshot & restore
-      Backup dotfiles to ZIP
-      Restore after redeploy
-      Preserve API keys
+  root((AI Engineering Environment))
+    opencode CLI
+      MCP servers
+        context7
+        duckdb
+        firecrawl
+        mermaid
+        metabase
+        sequential-thinking
+        serena
+        lean-ctx
+      Custom agents
+        plan
+        code
+        review
+        test
+        analyze
+    Zed editor
+      Settings
+      Keymap
+      lean-ctx rules
+    Ghostty terminal
+      Dracula theme
+    Bruno API client
+      Collections
+      Dark theme
+    Shell & CLI
+      zsh aliases
+      Functions
+      glab GitLab CLI
+      git-review-cli
+      opencode-session
+      kubectl-multi-logs
 ```
 
 ## Why
