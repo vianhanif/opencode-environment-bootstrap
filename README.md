@@ -77,7 +77,17 @@ Example config file:
 {
   "CONTEXT7_API_KEY": "ctx7sk-...",
   "FIRECRAWL_API_KEY": "fc-...",
-  "PROJECTS_DIR": "~/code"
+  "PROJECTS_DIR": "~/code",
+  "GITLAB_ORG": "my-org",
+  "BRUNO_COLLECTIONS": [
+    {
+      "name": "api-collection",
+      "repo": "https://gitlab.com/my-org/api-collection.git"
+    }
+  ],
+  "METABASE_URL": "https://metabase.my-org.io",
+  "METABASE_USER": "me@example.com",
+  "METABASE_PASS": "s3cret"
 }
 ```
 
