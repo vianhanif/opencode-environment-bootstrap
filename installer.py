@@ -45,6 +45,17 @@ from pathlib import Path
 from string import Template
 
 
+def _prompt_input(prompt):
+    """Read input from the terminal, even when stdin is piped (e.g. curl | bash)."""
+    try:
+        with open("/dev/tty", "r") as tty:
+            sys.stdout.write(prompt)
+            sys.stdout.flush()
+            return tty.readline().strip()
+    except (OSError, IOError):
+        return input(prompt).strip()
+
+
 # ── Constants ──
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -802,7 +813,7 @@ def clean_machine(vars=None, dry_run=False):
         print(f"  {len(to_remove)} items would be removed")
         return True
 
-    answer = input("  Proceed? [y/N] ").strip().lower()
+    answer = _prompt_input("  Proceed? [y/N] ").lower()
     if answer != "y":
         info("Aborted")
         return False
