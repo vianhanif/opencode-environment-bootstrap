@@ -207,6 +207,24 @@ The opencode config includes several MCP servers that depend on external runtime
 
 The check runs after app installations so Homebrew is ready. Use `--skip-apps` to skip brew-based installs — runtimes will still be checked and warned about if missing.
 
+## Tools & MCP Sources
+
+| Component | Source |
+|-----------|--------|
+| **OpenCode** CLI | [opencode.ai](https://opencode.ai) |
+| **lean-ctx** context runtime | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
+| **glab** (GitLab CLI) | [gitlab-org/cli](https://gitlab.com/gitlab-org/cli) |
+| **git-review-cli** | [vianhanif/git-review-cli](https://github.com/vianhanif/git-review-cli) |
+| **opencode-session** viewer | [vianhanif/opencode-session-viewer](https://github.com/vianhanif/opencode-session-viewer) |
+| **kubectl-multi-logs** | [vianhanif/kubectl-multi-logs](https://github.com/vianhanif/kubectl-multi-logs) |
+| **context7** MCP | [upstash/context7](https://github.com/upstash/context7) / [context7.com](https://context7.com) |
+| **duckdb** MCP (`mcp-server-motherduck`) | [motherduckdb/mcp-server-motherduck](https://github.com/motherduckdb/mcp-server-motherduck) |
+| **firecrawl** MCP | [firecrawl/firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server) |
+| **mermaid** MCP | [hustcc/mcp-mermaid](https://github.com/hustcc/mcp-mermaid) |
+| **metabase** MCP | [imlewc/metabase-server](https://github.com/imlewc/metabase-server) |
+| **sequential-thinking** MCP | [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) |
+| **serena** code index MCP | [oraios/serena](https://github.com/oraios/serena) |
+
 ## Development
 
 ```bash
