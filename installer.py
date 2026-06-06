@@ -126,10 +126,13 @@ def resolve_variables(args):
         else:
             vars[key] = defaults[key] if defaults[key] else ""
 
-    # Apply to vars
+    # Apply to vars (preserve non-primitive types like lists/dicts)
     for key, val in defaults.items():
         if val is not None:
-            vars[key] = str(val)
+            if isinstance(val, (str, int, float, bool)):
+                vars[key] = str(val)
+            else:
+                vars[key] = val
 
     # Prompt for critical missing values (non-interactive if --force)
     if not args.dry_run and not sys.stdin.isatty():
