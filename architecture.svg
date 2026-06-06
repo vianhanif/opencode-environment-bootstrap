@@ -48,8 +48,7 @@
   <!-- Zed -->
   <rect x="40" y="125" width="150" height="60" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5" filter="url(#shadow)"/>
   <text x="115" y="150" text-anchor="middle" font-family="SF Mono, Menlo, monospace" font-size="13" font-weight="bold" fill="#e6edf3">Zed Editor</text>
-  <text x="115" y="168" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#8b949e">Vim keybindings, LSP,</text>
-  <text x="115" y="181" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#8b949e">lean-ctx context rules</text>
+  <text x="115" y="168" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#8b949e">Vim keybindings + LSP</text>
 
   <!-- Ghostty -->
   <rect x="225" y="125" width="150" height="60" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5" filter="url(#shadow)"/>
