@@ -4,11 +4,6 @@ One-shot bootstrap for an opinionated AI engineering environment. Installs and c
 
 ## Overview
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="architecture.svg">
-  <img src="architecture.svg" alt="Architecture diagram" width="800">
-</picture>
-
 ## Why
 
 Setting up a new machine for AI-assisted development involves the same tedious steps every time:
