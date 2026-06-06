@@ -295,7 +295,7 @@ def ensure_apps(vars, dry_run=False):
 
 REPOS = {
     "kubectl-multi-logs":  "https://github.com/vianhanif/kubectl-multi-logs.git",
-    "git-review-cli":      "https://github.com/vianhanif/git-review-cli.git",
+    "git-review-cli":      "git+https://github.com/vianhanif/git-review-cli.git",
     "opencode-session":    "https://github.com/vianhanif/opencode-session-viewer.git",
 }
 
@@ -311,16 +311,15 @@ def _clone_repo(url, dest, dry_run=False):
     run(["git", "clone", "--depth", "1", url, str(dest)])
     return True
 
-def _pip_install(path, dry_run=False):
-    """pip install -e a local path."""
-    pip = shutil.which("pip3") or shutil.which("pip")
-    if not pip:
-        warn("pip not found — skip pip install")
+def _pip_install(url, dry_run=False):
+    """pip install from a git URL."""
+    if not shutil.which("python3"):
+        warn("python3 not found — skip pip install")
         return False
     if dry_run:
-        info(f"[dry-run] Would run: {pip} install -e {path}")
+        info(f"[dry-run] Would run: python3 -m pip install {url}")
         return True
-    run([pip, "install", "-e", str(path)])
+    run(["python3", "-m", "pip", "install", str(url)])
     return True
 
 def _symlink(target, name, dry_run=False):
