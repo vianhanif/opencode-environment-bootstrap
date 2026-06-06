@@ -55,15 +55,18 @@ python3 installer.py
 ### Options
 
 ```
---config FILE        JSON/YAML config file with variables
---skip-opencode      Skip opencode config deployment
---skip-shell         Skip shell config deployment
---skip-tools         Skip dev tool installation (lean-ctx, glab, git-review-cli, etc.)
---skip-apps          Skip app installations (brew cask)
---skip-app-configs   Skip app config deployments
---force              Overwrite without confirmation
---dry-run            Show what would be done without modifying anything
---verbose            Verbose output
+--config FILE              JSON/YAML config file with variables
+--snapshot FILE            Create ZIP of custom configs and exit
+--restore-snapshot FILE    Restore snapshot after deployment
+--clean                    Wipe managed configs + extras (apps stay installed)
+--skip-opencode            Skip opencode config deployment
+--skip-shell               Skip shell config deployment
+--skip-tools               Skip dev tool installation (lean-ctx, glab, git-review-cli, etc.)
+--skip-apps                Skip app installations (brew cask)
+--skip-app-configs         Skip app config deployments
+--force                    Overwrite without confirmation
+--dry-run                  Show what would be done without modifying anything
+--verbose                  Verbose output
 ```
 
 ### Config variables
@@ -122,6 +125,20 @@ python3 installer.py --config my-config.json
 1. Existing `~/.config/opencode/` is backed up to `~/.config/opencode/backup-{timestamp}/`
 2. All config files are overwritten with the template versions
 3. Your old config is safe in the backup directory — restore individual files as needed
+
+### `--clean` (wipe configs + extras)
+
+Removes everything the bootstrap manages, but **leaves apps installed**:
+
+- OpenCode config (`~/.config/opencode/`)
+- Shell dotfiles (`~/.zsh/`, `--zshrc` sourcing block)
+- App configs (zed settings/keymap/rules, ghostty config, Bruno app support)
+- Dev tool symlinks (`kubectl-multi-logs`, `opencode-session`, `lean-ctx`)
+- Bruno collections and cloned tool repos (`opencode-session-viewer`)
+
+Safe (not touched): zed, ghostty, bruno, glab, opencode CLI, git-review-cli, lean-ctx binary, pip packages, brew formulae.
+
+Shows a full list of what will be removed and prompts `[y/N]` before executing. Combine with `--config` and `--skip-*` flags to re-deploy specific layers after cleaning. Pass `--snapshot FILE` first to back up custom files before wiping.
 
 ### What gets replaced
 
