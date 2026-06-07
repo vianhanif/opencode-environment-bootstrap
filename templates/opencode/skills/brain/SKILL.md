@@ -13,7 +13,7 @@ description: Enforce serena project setup, audit and validate repository memorie
 
 ---
 
-## Git & Worktree Enforcement
+## Pre-Flight Checks
 
 **MANDATORY:** Enforce these steps in order. Do NOT auto-evaluate — use the `question` tool for every confirmation.
 
@@ -34,58 +34,18 @@ description: Enforce serena project setup, audit and validate repository memorie
 - If the current branch is a feature/bugfix branch (matches `feature/*`, `bugfix/*`, or does NOT match the confirmed main branch):
   - **STOP.** Tell the user: "Brain must run from the main branch (`{main-branch}`), not a WIP branch. Please switch to `{main-branch}` and re-invoke `/agent brain`."
   - Do NOT proceed. Do NOT create a worktree from a WIP branch.
-- If the current branch IS the main branch → proceed to create the isolated worktree.
-
-### 5. Create Isolated Worktree (Always)
-Brain memories go through a git branch + commit + push cycle — they are version-controlled changes. Always operate inside an isolated worktree to keep the main branch clean during auditing.
-
-After the user confirms the main branch, create a dedicated worktree:
-```bash
-WORKTREE_PATH=~/.opencode-worktree/brain/{main-branch}
-WORKTREE_BRANCH=setup/brain-{YYYYMMDD}
-mkdir -p $(dirname "$WORKTREE_PATH")
-git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-branch}
-cd "$WORKTREE_PATH"
-```
-- Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
-- **Reading memories**: Use serena MCP tools (it works on the original repo — fine, read-only is not a problem)
-- **Writing memories**: Do NOT use serena MCP tools (`write_memory`, `edit_memory`). They write to the original repo's `.serena/`, defeating worktree isolation. Instead, use native file operations (e.g., `write`, `edit`) targeting the worktree path.
-
-### 6. Post-Worktree Merge Flow
-After Phase 3 is complete:
-
-1. **Commit & push** from the worktree:
-   ```bash
-   git add .serena/
-   git commit -m "docs: update serena project memories"
-   git push -u {remote} "$WORKTREE_BRANCH"
-   ```
-2. **Create a Merge Request** — instruct the user to create an MR or use `git-review-cli`:
-   - Target branch: `{main-branch}`
-   - Source branch: `setup/brain-{YYYYMMDD}`
-3. **Merge** — the MR should be merged to `{main-branch}`
-4. **Clean up the worktree** (only after merge):
-   ```bash
-   cd $(git rev-parse --git-common-dir)/..
-   git worktree remove --force "$WORKTREE_PATH"
-   git worktree prune
-   ```
-5. **Next session** — after the MR is merged, serena MCP will read the memories from the main branch via normal `serena_read_memory` / `serena_list_memories` commands.
-
-**Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
+- If the current branch IS the main branch → proceed to Phase 1.
 
 ---
 
-## Three-Phase Workflow
-
-### Phase 1 — Setup Enforcement & Safety Check
+## Phase 1 — Safety Check (run in original repo)
 
 Validate that Serena project memories are properly initialized, version-controlled, and shareable — so the repo's knowledge survives machine wipe and reaches every team member who clones the repo.
 
-Run these checks in order. **Do not proceed to Phase 2 until every check passes.**
+Run these checks **in the original repo** (before creating the worktree). **Do not proceed until every check passes.**
 
 #### 1. `.serena/` directory exists
-- Use `list_memories` with scope `"project"` to verify Serena can read project memories
+- Use `serena_list_memories()` to verify Serena can read project memories
 - If no memories returned → the directory hasn't been initialized
 
 #### 2. `.serena/` is NOT gitignored
@@ -111,8 +71,8 @@ Run these checks in order. **Do not proceed to Phase 2 until every check passes.
 - Run `git status --short .serena/` — must return **nothing**
 - If dirty → flag for user: memories are not safe. Commit or discard before proceeding.
 
-#### 6. `onboard_project` has been run
-- If `.serena/` exists but memories are sparse or missing the project overview → run `onboard_project`
+#### 6. Serena onboarding has been run
+- If `.serena/` exists but memories are sparse or missing the project overview → call `serena_onboarding()`
 - This generates the initial language detection, file counts, and project structure analysis
 
 #### Summary Report
@@ -130,26 +90,46 @@ Serena Memory Safety Report
   Verdict:    SAFE — memories are version-controlled and cloneable
 ```
 
-If any check fails, its row shows ❌ and the fix action. Do not proceed to Phase 2 until the verdict reads `SAFE`.
+If any check fails, its row shows ❌ and the fix action. **Do not proceed until the verdict reads `SAFE`.**
 
-### Phase 2 — Memory Audit
+---
+
+## Create Worktree
+
+After Phase 1 passes, create an isolated worktree. Brain memories go through a git branch + commit + push cycle — always operate inside an isolated worktree to keep the main branch clean.
+
+```bash
+WORKTREE_PATH=~/.opencode-worktree/brain/{main-branch}
+WORKTREE_BRANCH=setup/brain-{YYYYMMDD}
+mkdir -p $(dirname "$WORKTREE_PATH")
+git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-branch}
+cd "$WORKTREE_PATH"
+```
+- Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
+- **Reading memories**: Use serena MCP tools (`serena_read_memory`, `serena_list_memories`). They read from the original repo — fine, read-only is not a problem.
+- **Writing memories**: Do NOT use serena write tools (`serena_write_memory`, `serena_edit_memory`). They write to the original repo's `.serena/`, defeating worktree isolation. Use native file operations (`write`, `edit`) targeting the worktree path.
+- **Capture session ID**: Run `CURRENT_SESSION=$(opencode-session | head -1 | awk '{print $1}')` — used for memory metadata.
+
+---
+
+## Phase 2 — Memory Audit (in worktree)
 
 Read all existing project-scoped memories and evaluate them against a completeness checklist.
 
-1. **List all memories:** use `list_memories` with scope `"project"`
-2. **Read each memory:** use `read_memory` for every memory file
+1. **List all memories:** use `serena_list_memories()`
+2. **Read each memory:** use `serena_read_memory(name)` for every memory file
 3. **Evaluate against checklist:**
 
-| Section | What to verify | Serena tool to audit |
-|---------|---------------|---------------------|
-| Architecture | Components, data flow, module responsibilities documented? | `get_symbol_overview` on key modules |
-| Key Symbols | Core classes/interfaces identified, their roles described? | `search_symbols` for top-level symbols |
+| Section | What to verify | Tools to audit |
+|---------|---------------|----------------|
+| Architecture | Components, data flow, module responsibilities documented? | `serena_get_symbols_overview` on key modules |
+| Key Symbols | Core classes/interfaces identified, their roles described? | `serena_find_symbol` for top-level symbols |
 | API Contracts | Endpoints, message schemas, event patterns documented? | Trace from entry points |
-| Data Model | Database tables, key entities, relationships described? | `search_symbols` for model/schema files |
-| Configuration | Environment variables, feature flags, runtime settings? | `search_in_files` for config patterns |
+| Data Model | Database tables, key entities, relationships described? | `serena_find_symbol` for model/schema files |
+| Configuration | Environment variables, feature flags, runtime settings? | `serena_search_for_pattern` for config patterns |
 | Conventions | Coding patterns, naming rules, error handling approach? | Derived from code review |
 | Decision Records | ADRs or why-this-way rationales for non-obvious choices? | Ask user if missing |
-| Dependencies | External services, data stores, libraries with versions? | `find_files` for package manifests |
+| Dependencies | External services, data stores, libraries with versions? | `Glob` for package manifests |
 
 4. **Produce an audit report:**
    - What exists and is accurate
@@ -157,36 +137,42 @@ Read all existing project-scoped memories and evaluate them against a completene
    - What is missing entirely
    - Confidence level per section
 
-### Phase 3 — Multi-Round Validation & Strengthening
+---
+
+## Phase 3 — Multi-Round Validation & Strengthening (in worktree)
 
 **Enforce a minimum of 3 rounds of Q&A.** Use the `question` tool each round.
 
 ```
-Round 1 → Gather missing context → write/update memories → Present
-Round 2 → Clarify assumptions → write/update memories → Present
-Round 3 → Confirm architecture decisions → write/update memories → Present
+Round 1 → Gather missing context → write/update memories → Report
+Round 2 → Clarify assumptions → write/update memories → Report
+Round 3 → Confirm architecture decisions → write/update memories → Report
 ```
 
 Each round:
 1. Use `question` to surface gaps from the audit: missing sections, unclear intent, stale claims, architectural ambiguity
 2. After receiving answers, **write/update `.serena/` memories using native file operations** in the worktree (`write` or `edit` tools). Do NOT use `serena_write_memory` / `serena_edit_memory` — those target the original repo, not the worktree.
-3. **Present the changes** — show what was written, updated, or flagged as still-unclear
+3. **Report the changes to the user via text output** — show what was written, updated, or flagged as still-unclear
 4. Proceed to the next round
 
 Only after completing at least 3 rounds, move to the final gate.
 
-### Session Journal (required before commit)
+---
+
+## Session Journal (required before commit)
 
 After the final round, write a `brain-session-{YYYYMMDD}.md` memory capturing:
 - **Sections covered** and depth reached per section
 - **Gaps flagged** for next session
 - **User decisions** and rationale recorded
 - **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD` (from previous session's journal or initial branch commit)
-- **Session ID** from the current context
+- **Session ID** — use `$CURRENT_SESSION` (captured during worktree creation)
 
 This journal is the entry point for the next Brain session — it's how the agent knows where it left off.
 
-### Final Confirmation Gate
+---
+
+## Final Confirmation Gate
 
 **STOP.** Before committing, verify:
 
@@ -214,18 +200,33 @@ Do NOT clean up the worktree until the MR is actually merged.
 
 ---
 
+## Post-Merge Cleanup
+
+Only after the MR is merged:
+```bash
+cd $(git rev-parse --git-common-dir)/..
+git worktree remove --force "$WORKTREE_PATH"
+git worktree prune
+```
+
+**Next session** — after merge, serena MCP reads memories from the main branch via normal `serena_read_memory` / `serena_list_memories` commands.
+
+**Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
+
+---
+
 ## Memory Format Guidelines
 
 Serena memories are `.md` files. **Every memory section MUST carry auditable metadata.**
 
 ### Mandatory Metadata Per Section
 
-| Field | Format | Example | Why |
+| Field | Format | How to Get | Example |
 |---|---|---|---|
-| Maturity level | `L0`-`L4` | `L2` | See BRAIN-role.md maturity table |
-| Session ID | `ses_xxx` | `ses_abc123` | Links to session that wrote/verified it |
-| Verified commit | full SHA | `a1b2c3d4e5f6...` | Commit HEAD when last verified |
-| Confidence | `high`/`medium`/`low` | `high` | Subjective certainty of the claim |
+| Maturity level | `L0`-`L4` | See BRAIN-role.md maturity table | `L2` |
+| Session ID | `ses_xxx` | `$CURRENT_SESSION` from worktree creation | `ses_abc123` |
+| Verified commit | full SHA | `git rev-parse origin/{main-branch}` | `a1b2c3d4e5f6...` |
+| Confidence | `high`/`medium`/`low` | Subjective certainty | `high` |
 
 ### Format Rules
 
@@ -237,7 +238,7 @@ Serena memories are `.md` files. **Every memory section MUST carry auditable met
 Bad: "The payment module handles all payment processing and was written in early 2025."
 Good:
 ```markdown
-> **Maturity:** L2 | **Session:** ses_abc123 | **Commit:** a1b2c3d
+> **Maturity:** L2 | **Session:** $CURRENT_SESSION | **Commit:** $(git rev-parse origin/main)
 
 ## Payment Module
 - **Entry point:** `src/services/PaymentService.ts:42` (class `PaymentService`)
@@ -276,7 +277,8 @@ Good:
 - [ ] Writing memories without reading existing ones first
 - [ ] Using `serena_write_memory` / `serena_edit_memory` — writes to original repo, bypasses worktree isolation
 - [ ] Assuming architectural intent without asking
-- [ ] Producing narrative prose instead of structured agent-readable format
+- [ ] Producing narrative prose without auditable metadata (maturity, session, commit, confidence)
 - [ ] Ending before completing 3 rounds of Q&A
+- [ ] Writing memory metadata with worktree HEAD instead of `origin/{main-branch}` commit
 - [ ] Leaving orphan worktrees on disk
 - [ ] Cleaning up worktree before MR is merged
