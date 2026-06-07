@@ -82,7 +82,6 @@ git worktree prune
 ### 2. Pre-Validation (if no step defined)
 - [ ] Validate assumptions against codebase
 - [ ] Write implementation guide
-- [ ] Confirm best LLM to use per task doc
 - [ ] Confirm which layer the fix belongs to (config, core/API code, test script) — test scripts are diagnostic, not the fix target
 
 **Wait for confirmation before proceeding.**
@@ -133,13 +132,9 @@ Enter CODER mode:
 
 ---
 
-## Model Selection
+## Model
 
-| Task Type | Recommended |
-|-----------|-------------|
-| Simple/Bulk | MiniMax M2.5, MiniMax M2.7 |
-| Moderate | MiMo-V2-Omni, MiMo-V2-Pro |
-| Complex | Kimi K2.5, GLM-5 |
+**deepseek v4 flash**
 
 
 

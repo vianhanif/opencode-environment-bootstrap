@@ -272,9 +272,6 @@ Include in your comment:
 
 ---
 
-## Model Selection
+## Model
 
-| Task | Recommended |
-|------|-------------|
-| Review | MiMo-V2-Omni, GPT mid-tier |
-| Complex | DeepSeek Reasoner, Kimi K2.5 |
+**deepseek v4 pro**

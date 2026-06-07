@@ -102,7 +102,7 @@ unless explicitly mentioned by engineer to look at a different branch
 
 ### Section 2 — Scope Table
 
-| # | Scope | Repository / Service | Complexity | Recommended LLM | Estimate |
+| # | Scope | Repository / Service | Complexity | Estimate |
 |---|-------|----------------------|------------|-----------------|----------|
 
 ### Complexity Guidelines
@@ -110,23 +110,9 @@ unless explicitly mentioned by engineer to look at a different branch
 - Medium → moderate logic
 - High → cross-service or architectural impact
 
-### LLM Recommendation (OpenCode Go)
-- Fast → simple / bulk tasks
-  - MiniMax M2.5
-  - MiniMax M2.7
-- Mid-tier → moderate coding / refactors / routine implementation
-  - MiMo-V2-Omni
-  - MiMo-V2-Pro
-- Advanced → complex architecture / debugging / planning
-  - Kimi K2.5
-  - GLM-5
+### Model
 
-#### LLM Notes
-- Best quality: GLM-5
-- Best reasoning/architecture: Kimi K2.5
-- Best value: MiniMax M2.7
-- Cheapest bulk/refactor/autocomplete: MiniMax M2.5
-- Balanced alternative: MiMo-V2-Omni
+**deepseek v4 pro** — defined in opencode.json.
 
 ---
 
@@ -253,54 +239,18 @@ A separate session should:
 
 ---
 
-# 9. Model Mapping
+# 9. Model Assignments
 
-## Planner (Session 1)
-**Purpose:** Thinking, structuring, decision-making  
-**Model Type:** High reasoning (expensive, low usage)
+Models are defined in `opencode.json`. Do not override in skill files.
 
-Recommended:
-- Claude Opus–class
-- GPT high-tier models
-- DeepSeek Reasoner
-
-Rule:
-- Prioritize accuracy over speed
-- Do NOT use for iterative coding
-
----
-
-## Coder (Session 2)
-**Purpose:** Fast implementation and iteration  
-**Model Type:** Fast, cheap, responsive
-
-Recommended:
-- MiMo-V2-Omni
-- GPT mini models
-- DeepSeek Chat / Code
-
-Rule:
-- Optimize for speed and iteration
-- Avoid overthinking
-
----
-
-## Reviewer (Session 3)
-**Purpose:** Validation and correctness  
-**Model Type:** Balanced reasoning
-
-Recommended:
-- MiMo-V2-Omni
-- GPT mid-tier models
-- DeepSeek Reasoner
-
----
-
-## Cost Strategy
-
-- ~80% usage should be Coder models
-- Use Planner models sparingly
-- Reviewer is optional but recommended for critical changes
+| Agent | Model |
+|-------|-------|
+| **Planner** | deepseek v4 pro |
+| **Coder** | deepseek v4 flash |
+| **Reviewer** | deepseek v4 pro |
+| **Tester** | deepseek v4 flash |
+| **Analyzer** | deepseek v4 pro |
+| **Brain** | deepseek v4 pro |
 
 ---
 

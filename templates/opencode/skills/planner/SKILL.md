@@ -78,7 +78,7 @@ Summarize:
 - Success criteria
 
 ### Scope Table
-| # | Scope | Target Branch | Repository / Service | Complexity | Recommended LLM | Estimate |
+| # | Scope | Target Branch | Repository / Service | Complexity | Estimate |
 ```
 
 **Target Branch:** Each scope item **must** define its own target branch name. This enables downstream delegation — each branch can be assigned to a `@coder`, `@tester`, or `@reviewer` independently, in parallel or sequentially. Branch naming: `feature/{ticket-id}-{kebab-scope-name}` or `bugfix/{ticket-id}-{kebab-scope-name}`.
@@ -87,11 +87,6 @@ Summarize:
 - `Low` = isolated/simple change
 - `Medium` = moderate logic
 - `High` = cross-service / architectural impact
-
-**LLM Tiers:**
-- `Fast` → MiniMax M2.5, MiniMax M2.7
-- `Mid` → MiMo-V2-Omni, MiMo-V2-Pro
-- `Advanced` → Kimi K2.5, GLM-5
 
 ### 5. Multi-Round Validation Loop
 
@@ -117,13 +112,9 @@ Only after completing at least 3 rounds, move to the final gate.
 
 ---
 
-## Model Recommendation
+## Model
 
-| Role | Model |
-|------|-------|
-| Planner | Claude Opus, DeepSeek Reasoner, Kimi K2.5, GLM-5 |
-
-Use high-reasoning models. Prioritize accuracy over speed.
+**deepseek v4 pro**
 
 ---
 

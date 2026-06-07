@@ -275,12 +275,9 @@ Use sequential thinking to trace through scenarios:
 
 ---
 
-## 6. Model Selection Reference
+## 6. Model
 
-| Task Type | Recommended LLM | Notes |
-|-----------|----------------|-------|
-| Review | MiMo-V2-Omni, GPT mid-tier | Balanced reasoning |
-| Complex review | DeepSeek Reasoner, Kimi K2.5 | Deep analysis |
+**deepseek v4 pro** — defined in opencode.json.
 
 ---
 

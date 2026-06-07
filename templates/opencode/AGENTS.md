@@ -126,40 +126,16 @@ Task documentation lives in the `changelog/` folder (singular) in each service r
 
 ## Model Selection
 
-| Role | Recommended | Avoid |
-|------|-------------|-------|
-| **Planner** | Claude Opus, DeepSeek Reasoner, Kimi K2.5, GLM-5 | Fast models |
-| **Coder** | Claude Sonnet, GPT-mini, MiniMax M2.7, MiMo-V2 | Overthinking |
-| **Reviewer** | MiMo-V2-Omni, GPT mid-tier | None |
+Models are defined in `opencode.json` per agent. Do not override in SKILL.md.
 
-### Cost Target
-~80% usage should be Coder models
-
-Track periodically via session logs to review session counts by model.
-
-### OpenCode Go LLM Tiers
-- **Fast** (simple/bulk tasks): MiniMax M2.5, MiniMax M2.7
-- **Mid-tier** (moderate coding): MiMo-V2-Omni, MiMo-V2-Pro
-- **Advanced** (complex architecture): Kimi K2.5, GLM-5
-
-| LLM | Best For |
-|-----|----------|
-| GLM-5 | Best quality |
-| Kimi K2.5 | Best reasoning/architecture |
-| MiniMax M2.7 | Best value |
-| MiniMax M2.5 | Cheapest bulk/refactor |
-| MiMo-V2-Omni | Balanced alternative |
-
-### MiniMax Known Issue & Workaround
-
-MiniMax M2.5/M2.7 has a recurring JSON serialization bug in tool calls:
-- Numbers passed as strings (`"7300"` instead of `7300`)
-- Arrays/objects passed as JSON-encoded strings (`"[{...}]"` instead of `[{...}]`)
-
-**Mitigations:**
-1. **Plugin** (`minimax-tool-fix.ts` in `~/.config/opencode/plugins/`) auto-fixes tool args before execution — silently handles the common cases above
-2. **If a tool call fails** with `SchemaError` — retry; the model will often self-correct on the second attempt
-3. **For complex tool chains** (multi-step with many args) — switch to MiMo-V2-Omni or Claude Sonnet which don't have this issue
+| Agent | Model |
+|-------|-------|
+| **Planner** | deepseek v4 pro |
+| **Coder** | deepseek v4 flash |
+| **Reviewer** | deepseek v4 pro |
+| **Tester** | deepseek v4 flash |
+| **Analyzer** | deepseek v4 pro |
+| **Brain** | deepseek v4 pro
 
 ---
 

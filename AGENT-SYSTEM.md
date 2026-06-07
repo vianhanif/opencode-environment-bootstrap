@@ -66,7 +66,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
    ```
 4. **Final Confirmation Gate** — Do not proceed until engineer confirms the final doc
 
-**Model:** DeepSeek Reasoner / Kimi K2.5 (high-reasoning)
+**Model:** deepseek v4 pro
 
 ### Coder (`@coder`)
 
@@ -78,7 +78,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 3. **Commit & Push** to targeted remote
 4. **Cleanup** — Remove worktree after push (user confirmed)
 
-**Model:** Various tiers per complexity (MiniMax M2.7, MiMo-V2)
+**Model:** deepseek v4 flash
 
 ### Reviewer (`@reviewer`)
 
@@ -91,7 +91,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 4. **Post to MR** — Via `git-review-cli` or `glab`
 5. **Cleanup** — Remove worktree after review posted
 
-**Model:** MiMo-V2-Omni / GPT mid-tier
+**Model:** deepseek v4 pro
 
 ### Tester (`@tester`)
 
@@ -111,7 +111,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 2. **Push fixes** if discovered during analysis
 3. **Cleanup** — Remove worktree after analysis complete
 
-**Model:** DeepSeek Reasoner / Kimi K2.5 (high-reasoning)
+**Model:** deepseek v4 pro
 
 ### Brain (`@brain`) — Standalone Knowledge Agent
 
@@ -127,7 +127,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 5. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
 6. **Source Code Safety** — `edit: deny, write: deny` — cannot touch source files. Uses serena memory tools exclusively.
 
-**Model:** DeepSeek Reasoner / Kimi K2.5
+**Model:** deepseek v4 pro
 
 ---
 

@@ -124,13 +124,9 @@ For **production** — use kubectl context switch directly. Use your logging too
 
 ---
 
-## Model Recommendation
+## Model
 
-| Role | Model |
-|------|-------|
-| Analyzer | Claude Opus, DeepSeek Reasoner, Kimi K2.5, GLM-5 |
-
-Use high-reasoning models. Prioritize accuracy over speed.
+**deepseek v4 pro**
 
 ---
 

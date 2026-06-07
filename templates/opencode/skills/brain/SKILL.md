@@ -222,12 +222,9 @@ Good:
 
 ---
 
-## Model Recommendation
+## Model
 
-| Task Type | Model |
-|-----------|-------|
-| Full evaluation (initial setup or major audit) | DeepSeek Reasoner, Kimi K2.5 |
-| Light refresh (verify against recent commits) | DeepSeek Flash, MiniMax M2.7 |
+**deepseek v4 pro**
 
 ---
 

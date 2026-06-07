@@ -22,8 +22,8 @@ When the user indicates coding intent (e.g., "start coding", "implement", "let's
 
 **If task documentation is provided but no step is defined:**
 - Pre-validate all assumptions with the codebase
-- Write implementation guide for the steps, to be used for LLM (e.g., MiniMax M2.7)
-- Ask for confirmation, and confirm best LLM to be used, according to documentation
+- Write implementation guide for the steps
+- Ask for confirmation
 
 **If both task documentation and step are provided:**
 - Enter CODER mode
@@ -57,14 +57,13 @@ The agent must present:
 | **Files to create** | `<list with paths>` |
 | **Order of changes** | `<sequence 1..N>` |
 | **Risks / side effects** | `<breaking changes, dependencies>` |
-| **Recommended LLM** | `<per task documentation>` |
+| **Recommended LLM** | `deepseek v4 flash` |
 
 ### Confirmation Checklist
 
 Before coding, confirm ALL of:
 - [ ] Implementation guide presented to user
 - [ ] User confirmed the plan
-- [ ] Best LLM selected per task doc recommendation
 - [ ] Branch source confirmed (`aus-testing` or `master` per repo)
 
 **STOP — wait for user confirmation before writing any code.**
@@ -166,13 +165,9 @@ Must include:
 
 ---
 
-## 6. Model Selection Reference
+## 6. Model
 
-| Task Type | Recommended LLM | Notes |
-|-----------|----------------|-------|
-| Simple / Bulk | MiniMax M2.5, MiniMax M2.7 | Fast, cheap |
-| Moderate coding / Refactors | MiMo-V2-Omni, MiMo-V2-Pro | Balanced |
-| Complex architecture | Kimi K2.5, GLM-5 | Best reasoning |
+**deepseek v4 flash** — defined in opencode.json.
 
 
 
@@ -181,7 +176,6 @@ Must include:
 - Always work incrementally
 - Do not assume missing requirements
 - Stop and ask if anything is unclear
-- Ensure the documentation mentions which level of LLM should be used
 - If the conversation becomes long or inconsistent, provide a short context summary for restart
 
 ---
