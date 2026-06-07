@@ -10,13 +10,13 @@ Brain is **not a one-shot auditor.** Each session builds on previous sessions to
 
 ### Session Journal
 
-After every session, write a `brain-session-{date}.md` memory containing:
+After every session, write a `brain-session-{date}.md` file in the `.serena/memories/journals/` topic containing:
 - Sections covered + depth reached
 - Gaps flagged for next session
 - User decisions and rationale recorded
 - `git log` range covered (from which commit to which commit)
 
-Next session starts by reading the latest journal to know where it left off.
+Next session starts by reading the latest `journals/brain-session-*.md` to know where it left off.
 
 ### Knowledge Maturity Levels
 
@@ -32,7 +32,7 @@ Tag every memory section with a maturity level. This drives session focus.
 
 ### Change-Driven Session Plan
 
-1. Read latest `brain-session-*.md` → know what was covered last session
+1. Read latest `journals/brain-session-*.md` → know what was covered last session
 2. Run `git diff {lastSessionCommit}..HEAD --name-only` → know what changed
 3. Map changed files to memory sections
 4. Score each section: `priority = (5 - maturity) + (3 if files changed) + (2 if flagged last session)`

@@ -109,6 +109,7 @@ cd "$WORKTREE_PATH"
 - **Reading memories**: Use serena MCP tools (`serena_read_memory`, `serena_list_memories`). They read from the original repo — fine, read-only is not a problem.
 - **Writing memories**: Do NOT use serena write tools (`serena_write_memory`, `serena_edit_memory`). They write to the original repo's `.serena/`, defeating worktree isolation. Use native file operations (`write`, `edit`) targeting the worktree path.
 - **Capture session ID**: Run `CURRENT_SESSION=$(opencode-session | head -1 | awk '{print $1}')` — used for memory metadata.
+- **Ensure journals topic exists**: Run `mkdir -p .serena/memories/journals/` — session journals are stored in the `journals/` topic, separate from domain memories in `core/`. See [Session Journal](#session-journal-required-before-commit).
 
 ---
 
@@ -180,11 +181,11 @@ Only after completing at least 3 rounds, move to the final gate.
 
 ## Session Journal (required before commit)
 
-After the final round, write a `brain-session-{YYYYMMDD}.md` memory capturing:
+After the final round, write a `brain-session-{YYYYMMDD}.md` file in the `.serena/memories/journals/` topic directory capturing:
 - **Sections covered** and depth reached per section
 - **Gaps flagged** for next session
 - **User decisions** and rationale recorded
-- **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD`. For the first session, use `git rev-parse origin/{main-branch}` as the base (`{lastSessionCommit}`). For subsequent sessions, read the previous `brain-session-*.md` journal to find `lastSessionCommit`.
+- **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD`. For the first session, use `git rev-parse origin/{main-branch}` as the base (`{lastSessionCommit}`). For subsequent sessions, read the previous `journals/brain-session-*.md` journal to find `lastSessionCommit`.
 - **Session ID** — use `$CURRENT_SESSION` (captured during worktree creation)
 
 This journal is the entry point for the next Brain session — it's how the agent knows where it left off.
@@ -195,7 +196,7 @@ This journal is the entry point for the next Brain session — it's how the agen
 
 **STOP.** Before committing, verify:
 
-1. **Session journal written?** — `brain-session-{YYYYMMDD}.md` exists with sections covered, gaps, decisions, commit range
+1. **Session journal written?** — `journals/brain-session-{YYYYMMDD}.md` exists in `.serena/memories/journals/` with sections covered, gaps, decisions, commit range
 2. **Every new/updated memory has metadata?** — maturity level, session ID, commit hash, confidence in every section
 3. **Stale claims flagged?** — any memory that contradicts current code is either fixed or explicitly flagged
 
