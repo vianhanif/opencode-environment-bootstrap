@@ -165,7 +165,7 @@ After the final round, write a `brain-session-{YYYYMMDD}.md` memory capturing:
 - **Sections covered** and depth reached per section
 - **Gaps flagged** for next session
 - **User decisions** and rationale recorded
-- **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD` (from previous session's journal or initial branch commit)
+- **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD`. For the first session, use `git rev-parse origin/{main-branch}` as the base (`{lastSessionCommit}`). For subsequent sessions, read the previous `brain-session-*.md` journal to find `lastSessionCommit`.
 - **Session ID** — use `$CURRENT_SESSION` (captured during worktree creation)
 
 This journal is the entry point for the next Brain session — it's how the agent knows where it left off.
@@ -233,7 +233,7 @@ Serena memories are `.md` files. **Every memory section MUST carry auditable met
 - **Structured sections** with clear headers over narrative prose
 - **List format** for conventions, dependencies, configuration keys
 - **Symbol references** (e.g., `src/services/PaymentService.ts:42`) over vague descriptions
-- Each memory file starts with a **file-level metadata block** (maturity, session, scope)
+- Each memory file starts with a **file-level metadata block** (maturity, session, commit, confidence)
 
 Bad: "The payment module handles all payment processing and was written in early 2025."
 Good:

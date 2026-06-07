@@ -25,7 +25,7 @@ Tag every memory section with a maturity level. This drives session focus.
 | Lvl | Meaning | Reached How |
 |-----|---------|------------|
 | `0` | Not documented | — |
-| `1` | Structural | Code-scan via serena (`search_symbols`, `get_symbol_overview`) |
+| `1` | Structural | Code-scan via serena (`serena_find_symbol`, `serena_get_symbols_overview`) |
 | `2` | Human-confirmed | Q&A validation — user answered questions about it |
 | `3` | Re-validated | Survived a git diff check — code agrees with memory |
 | `4` | Cross-referenced | Cited by other memories, used successfully by planner/coder |
@@ -54,11 +54,11 @@ Questions evolve per session:
 - **Structured sections** with clear headers over narrative prose
 - **List format** for conventions, dependencies, configuration keys
 - **Symbol references** (`src/services/PaymentService.ts:42`) over vague descriptions
-- **Metadata** — maturity level, last verified commit, session ID
+- **Metadata** — maturity level, verified commit, session ID, confidence
 
 ### Staleness Detection
 
-- Every memory section carries `lastVerifiedAt: <commit-hash>`
+- Every memory section carries `verifiedCommit: <commit-hash>` (use `git rev-parse origin/{main-branch}`)
 - At session start, compare against HEAD
 - Sections with affected files in diff → flagged for re-verification
 - Sections at maturity 3+ with no code changes → skip (trust)
@@ -84,4 +84,4 @@ Brain is a pre-requisite for effective multi-agent workflows:
 - **Reviewer** reads decision records and contract memories during review
 - **Analyzer** reads component maps and integration boundaries during investigation
 
-Other agents can flag stale memories via `write_memory` with the `brain-flag-stale-{date}` naming pattern. Brain reads flagged memories at session start.
+Other agents can flag stale memories via `serena_write_memory()` with the `brain-flag-stale-{date}` naming pattern. Brain reads flagged memories at session start.
