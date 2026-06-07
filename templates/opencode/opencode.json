@@ -102,9 +102,7 @@
       "type": "local"
     }
   },
-  "plugin": [
-    "@warp-dot-dev/opencode-warp@0.1.5"
-  ],
+  "plugin": [],
   "agent": {
     "planner": {
       "description": "Understand and document tasks before any coding",
