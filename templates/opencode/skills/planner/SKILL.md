@@ -78,8 +78,10 @@ Summarize:
 - Success criteria
 
 ### Scope Table
-| # | Scope | Repository / Service | Complexity | Recommended LLM | Estimate |
+| # | Scope | Target Branch | Repository / Service | Complexity | Recommended LLM | Estimate |
 ```
+
+**Target Branch:** Each scope item **must** define its own target branch name. This enables downstream delegation — each branch can be assigned to a `@coder`, `@tester`, or `@reviewer` independently, in parallel or sequentially. Branch naming: `feature/{ticket-id}-{kebab-scope-name}` or `bugfix/{ticket-id}-{kebab-scope-name}`.
 
 **Complexity:**
 - `Low` = isolated/simple change
@@ -91,9 +93,27 @@ Summarize:
 - `Mid` → MiMo-V2-Omni, MiMo-V2-Pro
 - `Advanced` → Kimi K2.5, GLM-5
 
-### 5. Confirmation Gate
+### 5. Multi-Round Validation Loop
 
-**STOP.** Do not proceed to coding until engineer confirms documentation.
+After producing the task documentation, **enforce a minimum of 3 rounds of questioning** to validate, confirm, and clarify all assumptions, doubts, and ambiguities. Do NOT skip rounds.
+
+```
+Round 1 → Update doc → Present for review
+Round 2 → Update doc → Present for review
+Round 3 → Update doc → Present for review
+```
+
+Each round:
+- Use the `question` tool to ask about assumptions, ambiguities, risks, missing details, or anything unclear in the current plan
+- After receiving answers, **update the task documentation** to reflect the clarifications
+- **Present the updated doc** to the user (diff or full)
+- Proceed to the next round
+
+Only after completing at least 3 rounds, move to the final gate.
+
+### 6. Final Confirmation Gate
+
+**STOP.** Do not proceed to coding until engineer explicitly confirms the final documentation.
 
 ---
 
