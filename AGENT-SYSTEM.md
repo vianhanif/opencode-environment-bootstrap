@@ -184,12 +184,22 @@ templates/opencode/
 │   ├── lean-ctx.ts                # Context compression plugin
 │   └── caveman/                   # Caveman workflow plugin
 └── skills/
-    ├── planner/SKILL.md       # Planner agent system prompt
-    ├── coder/SKILL.md         # Coder agent system prompt
-    ├── reviewer/SKILL.md      # Reviewer agent system prompt
-    ├── tester/SKILL.md        # Tester agent system prompt
-    ├── analyzer/SKILL.md      # Analyzer agent system prompt
+    ├── planner/
+    │   ├── SKILL.md               # Planner agent system prompt
+    │   └── PLANNER-role.md        # Full workflow rules (ticket confirmation, branching, coding standards)
+    ├── coder/
+    │   ├── SKILL.md               # Coder agent system prompt
+    │   └── CODER-role.md          # Implementation rules (pre-coding, change strategy, 10 principles)
+    ├── reviewer/
+    │   ├── SKILL.md               # Reviewer agent system prompt
+    │   └── REVIEWER-role.md       # Code review rules (checklist, output format, constraints)
+    ├── tester/
+    │   ├── SKILL.md               # Tester agent system prompt
+    │   └── TESTER-role.md         # Manual testing guidelines (scenarios, checklist, handoff protocol)
+    ├── analyzer/
+    │   ├── SKILL.md               # Analyzer agent system prompt
+    │   └── ANALYZER-role.md       # Investigation workflow (triage, discover, trace, conclude)
     └── brain/
-        ├── SKILL.md           # Brain agent system prompt (standalone)
-        └── BRAIN-role.md      # Brain progressive understanding rules
+        ├── SKILL.md               # Brain agent system prompt (standalone, serena knowledge)
+        └── BRAIN-role.md          # Progressive understanding rules (session journal, maturity levels, memory quality)
 ```
