@@ -216,13 +216,16 @@ After push, create an MR (or ask the user to create one):
 
 Instruct the user: "MR created/needs creation from `setup/brain-{YYYYMMDD}` into `{main-branch}`. After it's merged, the memories will be available to serena read commands in future sessions."
 
-Do NOT clean up the worktree until the MR is actually merged.
+Save the MR ID (e.g. `8411`) — it's needed for [Post-Merge Cleanup](#post-merge-cleanup) verification. Do NOT clean up the worktree until the MR is actually merged.
 
 ---
 
 ## Post-Merge Cleanup
 
-Only after the MR is merged:
+**Only clean up after the MR is merged.** Before running cleanup, verify MR state:
+
+1. Run `glab mr view <MR_ID>` and check the output for `state: merged` or `merged: true`. If not merged → **STOP** and tell the user: "MR is not yet merged. Worktree kept for re-use."
+2. If merged → proceed with cleanup:
 ```bash
 cd $(git rev-parse --git-common-dir)/..
 git worktree remove --force "$WORKTREE_PATH"
