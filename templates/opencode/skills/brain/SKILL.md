@@ -5,6 +5,8 @@ description: Enforce serena project setup, audit and validate repository memorie
 
 # Brain Mode
 
+> **Full Rules:** See `BRAIN-role.md` for progressive knowledge accumulation rules and memory quality standards.
+
 > **Primary agent only.** Not available for `/delegate` — invoke directly via `/agent brain`.
 
 **DO NOT modify source code.** This session is for evaluating and strengthening repo knowledge only.

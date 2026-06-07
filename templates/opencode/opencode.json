@@ -4,7 +4,7 @@
     "context7": {
       "enabled": true,
       "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-84a8a243-4067-44b5-83a2-b66002adbbef"
+        "CONTEXT7_API_KEY": "$CONTEXT7_API_KEY"
       },
       "type": "remote",
       "url": "https://mcp.context7.com/mcp"
@@ -29,18 +29,15 @@
       ],
       "enabled": true,
       "environment": {
-        "FIRECRAWL_API_KEY": "fc-c449f119086a4f8d95a2ca9b27d5d554"
+        "FIRECRAWL_API_KEY": "$FIRECRAWL_API_KEY"
       },
       "type": "local"
     },
     "lean-ctx": {
       "command": [
-        "/Users/pid-alvian/.local/bin/lean-ctx"
+        "lean-ctx"
       ],
       "enabled": true,
-      "environment": {
-        "LEAN_CTX_DATA_DIR": "/Users/pid-alvian/.config/lean-ctx"
-      },
       "type": "local"
     },
     "mcp-mermaid": {
@@ -60,9 +57,9 @@
       ],
       "enabled": false,
       "environment": {
-        "METABASE_PASSWORD": "Qweqweq123!",
-        "METABASE_URL": "https://reporting-testing.tapinsure.io",
-        "METABASE_USERNAME": "alvian.hanif@pasarpolis.com"
+        "METABASE_PASSWORD": "$METABASE_PASS",
+        "METABASE_URL": "$METABASE_URL",
+        "METABASE_USERNAME": "$METABASE_USER"
       },
       "type": "local"
     },
@@ -74,9 +71,9 @@
       ],
       "enabled": false,
       "environment": {
-        "METABASE_PASSWORD": "Qweqweq123!",
-        "METABASE_URL": "https://reporting-testing.tapinsure.io",
-        "METABASE_USERNAME": "alvian.hanif@pasarpolis.com"
+        "METABASE_PASSWORD": "$METABASE_PASS",
+        "METABASE_URL": "$METABASE_URL",
+        "METABASE_USERNAME": "$METABASE_USER"
       },
       "type": "local"
     },
@@ -106,8 +103,7 @@
     }
   },
   "plugin": [
-    "@warp-dot-dev/opencode-warp@0.1.5",
-    "opencode-handoff@0.5.0"
+    "@warp-dot-dev/opencode-warp@0.1.5"
   ],
   "agent": {
     "planner": {
@@ -125,7 +121,12 @@
       "description": "Implement code changes incrementally per task documentation",
       "mode": "all",
       "model": "opencode-go/deepseek-v4-flash",
-      "prompt": "{file:./skills/coder/SKILL.md}"
+      "prompt": "{file:./skills/coder/SKILL.md}",
+      "permission": {
+        "edit": "allow",
+        "write": "allow",
+        "bash": "allow"
+      }
     },
     "reviewer": {
       "description": "Review diffs for correctness, risks, and consistency",
@@ -134,7 +135,8 @@
       "prompt": "{file:./skills/reviewer/SKILL.md}",
       "permission": {
         "edit": "deny",
-        "write": "deny"
+        "write": "deny",
+        "bash": "allow"
       }
     },
     "tester": {

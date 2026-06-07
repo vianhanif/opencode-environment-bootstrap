@@ -189,5 +189,7 @@ templates/opencode/
     ├── reviewer/SKILL.md      # Reviewer agent system prompt
     ├── tester/SKILL.md        # Tester agent system prompt
     ├── analyzer/SKILL.md      # Analyzer agent system prompt
-    └── brain/SKILL.md         # Brain agent system prompt (standalone)
+    └── brain/
+        ├── SKILL.md           # Brain agent system prompt (standalone)
+        └── BRAIN-role.md      # Brain progressive understanding rules
 ```

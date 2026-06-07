@@ -27,8 +27,11 @@ Every development task uses **role-focused sessions**. Keep each session aligned
 
 ```
 Primary flow (ideal):
-  Session 1 (Planner)  →  Session 2 (Coder)  →  Session 3 (Reviewer)
-      Document              Implement              Validate
+  Session B (Brain)  →  Session 1 (Planner)  →  Session 2 (Coder)  →  Session 3 (Reviewer)
+      Onboard/Refresh       Document              Implement              Validate
+
+  Brain is standalone (via /agent brain, not part of /delegate). Run once per repo
+  or after major changes. Skips if .serena/ memories exist and are recent.
 
 Test-fix cycle (same session, skill switching):
   Tester skill → find bug → Coder skill → fix → Tester skill → retest
@@ -106,9 +109,12 @@ Parallel + sequential:
 
 Use the `/delegate` command to trigger this workflow.
 
-### Branch Sources
-- Default: `main` (or the project's default branch)
-- Create feature branches from the default branch
+### Branch Sources & Confirmation
+
+- Source and target branches are **always confirmed at session start** via the `question` tool — never auto-detected or assumed
+- Each agent enforces its own branch rules: `@coder`/`@tester`/`@analyzer` ask for target branch, `@brain` enforces main branch only
+- Feature branch naming: `feature/{ticket-id}-{short-description}`
+- Bugfix branch naming: `bugfix/{ticket-id}-{short-description}`
 
 ### File Naming
 Task docs: `{YYYYMMDD}-{ticket-id}-{title}.md` **(ENFORCED — all task docs must follow this format; date, ticket, and title separated by hyphens)**
@@ -163,6 +169,7 @@ MiniMax M2.5/M2.7 has a recurring JSON serialization bug in tool calls:
 - `REVIEWER-role.md` - Review checklist
 - `TESTER-role.md` - Testing guidelines
 - `ANALYZER-role.md` - Investigation workflow and root cause analysis
+- `BRAIN-role.md` - Serena memory enforcement and knowledge strengthening rules
 
 ---
 
@@ -312,6 +319,7 @@ Available skills:
 - `reviewer` - Load for review sessions
 - `tester` - Load for testing guidance
 - `analyzer` - Load for production issue investigation and root cause analysis
+- `brain` - Load for serena memory setup, audit, and knowledge strengthening
 
 ## Local Tools
 
@@ -373,25 +381,6 @@ pod-app-list   # Returns sorted, deduplicated app names
 ```
 
 ---
-
-# opencode-handoff — Session Handoff
-<!-- handoff -->
-
-When context grows long or noisy, use `/handoff <goal>` instead of writing a manual restart summary. This plugin:
-- Analyzes full conversation history to extract key decisions, file references, and remaining work
-- Opens a new session with an editable draft prompt containing `@file` refs for context
-- Provides a `read_session` tool in the new session to fetch full transcripts if needed
-
-**When to use:** Context Management trigger (long/inconsistent/noisy) → use `/handoff` instead of manual restart summary.
-
-**After handoff:** Load relevant skill (planner/coder/reviewer/tester/analyzer) in the new session to continue.
-
-**Example:**
-```
-/handoff continue implementing the user auth feature from this session
-```
-
-<!-- /handoff -->
 
 # lean-ctx — Context Engineering Layer
 <!-- lean-ctx-rules-v11 -->
