@@ -40,10 +40,15 @@ Tag every memory section with a maturity level. This drives session focus.
 
 ### Progressive Question Depth
 
+All questions must follow **read-first, ask-to-confirm**:
+1. Read relevant code paths before every question
+2. Form a finding with code reference (`file.go:42`)
+3. Ask only to confirm intent or fill gaps the code can't answer
+
 Questions evolve per session:
-- **Session 1** (all L0) → Breadth: "What does this service do? Walk me through main components"
-- **Session 2** (some L2) → Validation: "Since last session, 3 files changed. Any new patterns?"
-- **Session 3+** (mixed L2-L3) → Deep-dive: "Last session flagged Configuration as a gap. Walk me through it"
+- **Session 1** (all L0) → Breadth: "I traced the handler chain in `initapp/api.go` and the middleware in `middleware/` — I found no auth middleware. Is Core trust-domained with auth upstream?"
+- **Session 2** (some L2) → Validation: "I diffed 3 files since last session. The change in `X.go` suggests Y — is that intentional?"
+- **Session 3+** (mixed L2-L3) → Deep-dive: "Last session flagged Configuration as a gap. I read `config/config.go` and traced all `PP_*` env var usages — found Z. Is there any env var not captured?"
 
 ---
 

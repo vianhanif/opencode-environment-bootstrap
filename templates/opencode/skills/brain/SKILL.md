@@ -141,19 +141,38 @@ Read all existing project-scoped memories and evaluate them against a completene
 
 ## Phase 3 — Multi-Round Validation & Strengthening (in worktree)
 
-**Enforce a minimum of 3 rounds of Q&A.** Use the `question` tool each round.
+**Enforce a minimum of 3 rounds of Q&A.**
+
+### The Rule: Read Code First, Ask to Confirm
+
+**Do NOT ask questions that can be answered by reading the code.** Every question must follow this sequence:
+
+1. **Read the code first** — Trace handlers, workers, middleware, config, templates to form a hypothesis
+2. **Form a finding** — "I found X in the code at `file.go:42`"
+3. **Ask only to confirm** — "I found X in the code — is this the current intent, or is there context outside the codebase?"
+
+Examples of bad vs good questions:
+
+| ❌ Bad (ask-from-scratch) | ✅ Good (read-first, ask-to-confirm) |
+|---------------------------|--------------------------------------|
+| "How does auth work?" | "I found no auth middleware in `initapp/api.go` and careServiceGroup checks env var API keys — is Core trust-domained with auth upstream in integrationservice?" |
+| "What's the deployment topology?" | "The Helm chart has 9 deployment templates (api, dequeuer, worker, etc.) and 10+ Pub/Sub subscribers. Is the pipeline aus-testing → testing → staging → production?" |
+| "How does the policy lifecycle work?" | "I traced validate → apply → enqueue CARE sync → document → payment. Is the flow always: create-policy sets `Pending`, CARE sync sets `InsurancePolicyNo` and transitions to `Active`?" |
+
+### Rounds Structure
 
 ```
-Round 1 → Gather missing context → write/update memories → Report
-Round 2 → Clarify assumptions → write/update memories → Report
+Round 1 → Validate code findings → write/update memories → Report
+Round 2 → Fill gaps the code couldn't answer → write/update memories → Report
 Round 3 → Confirm architecture decisions → write/update memories → Report
 ```
 
 Each round:
-1. Use `question` to surface gaps from the audit: missing sections, unclear intent, stale claims, architectural ambiguity
-2. After receiving answers, **write/update `.serena/` memories using native file operations** in the worktree (`write` or `edit` tools). Do NOT use `serena_write_memory` / `serena_edit_memory` — those target the original repo, not the worktree.
-3. **Report the changes to the user via text output** — show what was written, updated, or flagged as still-unclear
-4. Proceed to the next round
+1. **Read relevant code paths** first (handlers, workers, config, deployment templates, middleware)
+2. Use `question` only to confirm findings, never to gather basic facts the code can reveal
+3. After receiving answers, **write/update `.serena/` memories using native file operations** in the worktree (`write` or `edit` tools). Do NOT use `serena_write_memory` / `serena_edit_memory` — those target the original repo, not the worktree.
+4. **Report the changes to the user via text output** — show what was written, updated, or flagged as still-unclear
+5. Proceed to the next round
 
 Only after completing at least 3 rounds, move to the final gate.
 
@@ -257,7 +276,7 @@ Good:
 4. **Use serena tools only for reading** — use `serena_read_memory` / `serena_list_memories` for reading existing memories. For writing, use native file operations (`write`, `edit`) targeting the worktree path. Never use `serena_write_memory` / `serena_edit_memory` — those write to the original repo, breaking worktree isolation.
 5. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
 6. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
-7. **Ask before assuming** — architectural intent lives in the team's head, not the code; surface ambiguity through `question`
+7. **Read code first, ask to confirm** — read the code to form a hypothesis before using `question`. Questions should validate findings from the codebase, not ask for basic facts the code can reveal. Use `question` only for: (a) confirming intent the code can't express, (b) filling gaps the code can't answer, (c) flagging ambiguity between what the code does and what the team intends.
 8. **Clean up worktree** — never leave orphan worktrees on disk
 
 ---
@@ -276,6 +295,7 @@ Good:
 - [ ] Operating outside an isolated worktree
 - [ ] Writing memories without reading existing ones first
 - [ ] Using `serena_write_memory` / `serena_edit_memory` — writes to original repo, bypasses worktree isolation
+- [ ] Asking basic questions the code can answer (read code first, ask only to confirm)
 - [ ] Assuming architectural intent without asking
 - [ ] Producing narrative prose without auditable metadata (maturity, session, commit, confidence)
 - [ ] Ending before completing 3 rounds of Q&A
