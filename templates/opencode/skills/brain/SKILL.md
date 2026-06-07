@@ -48,22 +48,30 @@ git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-b
 cd "$WORKTREE_PATH"
 ```
 - Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
-- All memory reads/writes happen **inside this worktree**
-- All serena memory writes go to `.serena/` within the repo
+- **Reading memories**: Use serena MCP tools (it works on the original repo — fine, read-only is not a problem)
+- **Writing memories**: Do NOT use serena MCP tools (`write_memory`, `edit_memory`). They write to the original repo's `.serena/`, defeating worktree isolation. Instead, use native file operations (e.g., `write`, `edit`) targeting the worktree path.
 
-### 6. Commit, Push, Clean Up
-After Phase 3 validation is complete, use `question` to ask user for explicit confirmation before:
-```bash
-git add .serena/
-git commit -m "docs: update serena project memories"
-git push -u {remote} "$WORKTREE_BRANCH"
-```
-Then clean up:
-```bash
-cd $(git rev-parse --git-common-dir)/..
-git worktree remove --force "$WORKTREE_PATH"
-git worktree prune
-```
+### 6. Post-Worktree Merge Flow
+After Phase 3 is complete:
+
+1. **Commit & push** from the worktree:
+   ```bash
+   git add .serena/
+   git commit -m "docs: update serena project memories"
+   git push -u {remote} "$WORKTREE_BRANCH"
+   ```
+2. **Create a Merge Request** — instruct the user to create an MR or use `git-review-cli`:
+   - Target branch: `{main-branch}`
+   - Source branch: `setup/brain-{YYYYMMDD}`
+3. **Merge** — the MR should be merged to `{main-branch}`
+4. **Clean up the worktree** (only after merge):
+   ```bash
+   cd $(git rev-parse --git-common-dir)/..
+   git worktree remove --force "$WORKTREE_PATH"
+   git worktree prune
+   ```
+5. **Next session** — after the MR is merged, serena MCP will read the memories from the main branch via normal `serena_read_memory` / `serena_list_memories` commands.
+
 **Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
 
 ---
@@ -161,7 +169,7 @@ Round 3 → Confirm architecture decisions → write/update memories → Present
 
 Each round:
 1. Use `question` to surface gaps from the audit: missing sections, unclear intent, stale claims, architectural ambiguity
-2. After receiving answers, use `write_memory` or `edit_memory` to update `.serena/` memories
+2. After receiving answers, **write/update `.serena/` memories using native file operations** in the worktree (`write` or `edit` tools). Do NOT use `serena_write_memory` / `serena_edit_memory` — those target the original repo, not the worktree.
 3. **Present the changes** — show what was written, updated, or flagged as still-unclear
 4. Proceed to the next round
 
@@ -169,7 +177,7 @@ Only after completing at least 3 rounds, move to the final gate.
 
 ### Final Confirmation Gate
 
-**STOP.** Use `question` to ask: "The serena memories are now updated. Shall I commit and push?"
+**STOP.** Use `question` to ask: "The serena memories are now updated. Shall I commit, push, and create an MR?"
 
 If confirmed:
 ```bash
@@ -178,12 +186,14 @@ git commit -m "docs: update serena project memories"
 git push -u {remote} "$WORKTREE_BRANCH"
 ```
 
-Then clean up the worktree (ask user first):
-```bash
-cd $(git rev-parse --git-common-dir)/..
-git worktree remove --force "$WORKTREE_PATH"
-git worktree prune
-```
+After push, create an MR (or ask the user to create one):
+- Source: `setup/brain-{YYYYMMDD}`
+- Target: `{main-branch}`
+- Title: `docs: update serena project memories`
+
+Instruct the user: "MR created/needs creation from `setup/brain-{YYYYMMDD}` into `{main-branch}`. After it's merged, the memories will be available to serena read commands in future sessions."
+
+Do NOT clean up the worktree until the MR is actually merged.
 
 ---
 
@@ -214,7 +224,7 @@ Good:
 1. **Never modify source code** — this agent writes only to `.serena/`
 2. **Operate from main branch only** — reject feature/bugfix WIP branches. Always ask, never hardcode the branch name.
 3. **Always use isolated worktree** — `~/.opencode-worktree/brain/{main-branch}/` with branch `setup/brain-{date}`
-4. **Use serena memory tools exclusively** — `write_memory`, `edit_memory`, `delete_memory`; do not use native file write/edit tools
+4. **Use serena tools only for reading** — use `serena_read_memory` / `serena_list_memories` for reading existing memories. For writing, use native file operations (`write`, `edit`) targeting the worktree path. Never use `serena_write_memory` / `serena_edit_memory` — those write to the original repo, breaking worktree isolation.
 5. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
 6. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
 7. **Ask before assuming** — architectural intent lives in the team's head, not the code; surface ambiguity through `question`
@@ -235,7 +245,9 @@ Good:
 - [ ] Hardcoding the main branch name — always ask
 - [ ] Operating outside an isolated worktree
 - [ ] Writing memories without reading existing ones first
+- [ ] Using `serena_write_memory` / `serena_edit_memory` — writes to original repo, bypasses worktree isolation
 - [ ] Assuming architectural intent without asking
 - [ ] Producing narrative prose instead of structured agent-readable format
 - [ ] Ending before completing 3 rounds of Q&A
 - [ ] Leaving orphan worktrees on disk
+- [ ] Cleaning up worktree before MR is merged
