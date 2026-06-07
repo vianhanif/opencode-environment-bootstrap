@@ -19,12 +19,36 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 | Layer | What | Files |
 |-------|------|-------|
-| **OpenCode** | 5 custom agents (plan/code/review/test/analyze), session workflow rules, `/delegate` command, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin, handoff plugin | `~/.config/opencode/` |
+| **OpenCode** | 5 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin, handoff plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
 | **Zed** | Vim keybindings, LSP config, lean-ctx context rules | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
+
+### Agent System — Multi-Agent Workflow with Enforcement
+
+The `/delegate` command orchestrates 5 specialized agents as an annotated DAG — write one message and let subagents execute in dependency order with full context sharing.
+
+| Agent | Role | Enforces |
+|-------|------|----------|
+| `@planner` | Document tasks before coding | Git context, 3-round validation loop, per-scope target branches |
+| `@coder` | Implement changes per spec | Plan-first rule, isolated worktree (`~/.opencode-worktree/coder/`), commit/push, cleanup |
+| `@reviewer` | Validate diffs for correctness | MR confirmation, isolated worktree, post review to MR, cleanup |
+| `@tester` | Plan and execute tests | Isolated worktree (`~/.opencode-worktree/tester/`), cleanup |
+| `@analyzer` | Investigate issues and logs | Isolated worktree (`~/.opencode-worktree/analyzer/`), cleanup |
+
+**All enforcement steps use the `question` tool** — the AI asks, you confirm. Nothing is auto-evaluated. Every execution agent works in its own `git worktree` so your working directory stays clean.
+
+```bash
+# Example — three agents, one /delegate command
+/delegate
+@planner design auth migration for PROJ-1237
+@result @coder implement auth changes
+@result @reviewer review the changes
+```
+
+See [AGENT-SYSTEM.md](AGENT-SYSTEM.md) for the full breakdown.
 
 The templates are generic — no hardcoded usernames, API keys, or organization-specific URLs. You supply those at install time or add them afterward.
 
