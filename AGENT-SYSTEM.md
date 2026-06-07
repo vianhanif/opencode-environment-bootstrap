@@ -45,7 +45,11 @@ Validate → Parse annotations → Build DAG → Execute roots → Collect resul
 
 ## Custom Agents
 
-All 5 agents are defined in `opencode.json` with `mode: "all"` (usable as primary agent or subagent). Each references a `SKILL.md` file as its system prompt.
+Six agents total: five delegation agents and one standalone knowledge agent. Each references a `SKILL.md` file as its system prompt.
+
+### Delegation Agents (`mode: "all"`)
+
+These participate in `/delegate` DAG orchestration and can be invoked directly via `/agent <name>`. All five have `mode: "all"`.
 
 ### Planner (`@planner`)
 
@@ -109,6 +113,20 @@ All 5 agents are defined in `opencode.json` with `mode: "all"` (usable as primar
 
 **Model:** DeepSeek Reasoner / Kimi K2.5 (high-reasoning)
 
+### Brain (`@brain`) — Standalone Knowledge Agent
+
+**Purpose:** Enforce serena project setup, audit and validate repository memories, and strengthen system knowledge through multi-round Q&A — the repo's institutional memory.
+
+**Invoke:** `/agent brain` only. `mode: "primary"` — not available via `/delegate`.
+
+**Enforcements:**
+1. **Phase 1 — Safety Check** — Validate `.serena/` exists, is NOT gitignored, is tracked by git, pushed to remote, has no uncommitted changes, and `onboard_project` has been run. Produces a shareability verdict before proceeding.
+2. **Phase 2 — Memory Audit** — Read all project-scoped memories and evaluate against an 8-section completeness checklist (architecture, key symbols, API contracts, data model, configuration, conventions, decision records, dependencies).
+3. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
+4. **Source Code Safety** — `edit: deny, write: deny` — cannot touch source files. Uses serena memory tools exclusively.
+
+**Model:** DeepSeek Reasoner / Kimi K2.5
+
 ---
 
 ## Worktree Enforcement Summary
@@ -119,6 +137,7 @@ All 5 agents are defined in `opencode.json` with `mode: "all"` (usable as primar
 | `@tester` | `~/.opencode-worktree/tester/{branch-name}/` | After testing complete |
 | `@analyzer` | `~/.opencode-worktree/analyzer/{branch-name}/` | After analysis complete |
 | `@reviewer` | `~/.opencode-worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
+| `@brain` | `~/.opencode-worktree/brain/{target-branch}/` (protected branches only) | After commit + push or MR |
 
 All enforcement steps use the `question` tool for explicit user confirmation — nothing is auto-evaluated.
 
@@ -167,5 +186,6 @@ templates/opencode/
     ├── coder/SKILL.md         # Coder agent system prompt
     ├── reviewer/SKILL.md      # Reviewer agent system prompt
     ├── tester/SKILL.md        # Tester agent system prompt
-    └── analyzer/SKILL.md      # Analyzer agent system prompt
+    ├── analyzer/SKILL.md      # Analyzer agent system prompt
+    └── brain/SKILL.md         # Brain agent system prompt (standalone)
 ```

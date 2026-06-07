@@ -156,6 +156,17 @@
         "write": "allow",
         "bash": "allow"
       }
+    },
+    "brain": {
+      "description": "Enforce serena project setup, audit and validate repository memories, and strengthen system knowledge through multi-round Q&A — the repo's institutional memory",
+      "mode": "primary",
+      "model": "opencode-go/deepseek-v4-pro",
+      "prompt": "{file:./skills/brain/SKILL.md}",
+      "permission": {
+        "edit": "deny",
+        "write": "deny",
+        "bash": "allow"
+      }
     }
   },
   "shell": "/bin/zsh",

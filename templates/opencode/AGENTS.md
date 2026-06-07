@@ -23,6 +23,7 @@ Every development task uses **role-focused sessions**. Keep each session aligned
 | 3 | Reviewer | Review diffs for correctness, risks, and consistency | For complex changes |
 | 4 | Tester | Execute test plans and verify behavior | After coding, or in test-fix cycles |
 | 5 | Analyzer | Investigate issues, trace code paths, and analyze logs | Bug/incident investigation |
+| B | Brain | Enforce serena setup, audit project memories, strengthen repo knowledge through Q&A | Repo onboarding / knowledge refresh |
 
 ```
 Primary flow (ideal):
@@ -73,6 +74,8 @@ Annotate tasks with role prefixes to delegate to role-specific subagents. The pa
 | `@analyzer` | Analyzer | task(subagent_type: "analyzer") |
 
 Each custom agent is defined in `opencode.json` with its own model, system prompt, and permission set. All five agents (`@planner`, `@coder`, `@reviewer`, `@tester`, `@analyzer`) have `mode: "all"` so they can be used both as primary agents (via `/agent <name>`) and as subagents (via delegation).
+
+**`@brain` is `mode: "primary"`** — invoke directly via `/agent brain` for serena memory setup, audit, and knowledge strengthening. Not available as a delegation target.
 
 **Dependency rules:**
 - `@result` before a role = depends on ALL preceding annotated tasks since the last `@result`
