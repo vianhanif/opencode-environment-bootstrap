@@ -175,9 +175,26 @@ Each round:
 
 Only after completing at least 3 rounds, move to the final gate.
 
+### Session Journal (required before commit)
+
+After the final round, write a `brain-session-{YYYYMMDD}.md` memory capturing:
+- **Sections covered** and depth reached per section
+- **Gaps flagged** for next session
+- **User decisions** and rationale recorded
+- **Commit range** — run `git log --oneline {lastSessionCommit}..HEAD` (from previous session's journal or initial branch commit)
+- **Session ID** from the current context
+
+This journal is the entry point for the next Brain session — it's how the agent knows where it left off.
+
 ### Final Confirmation Gate
 
-**STOP.** Use `question` to ask: "The serena memories are now updated. Shall I commit, push, and create an MR?"
+**STOP.** Before committing, verify:
+
+1. **Session journal written?** — `brain-session-{YYYYMMDD}.md` exists with sections covered, gaps, decisions, commit range
+2. **Every new/updated memory has metadata?** — maturity level, session ID, commit hash, confidence in every section
+3. **Stale claims flagged?** — any memory that contradicts current code is either fixed or explicitly flagged
+
+Use `question` to ask: "The serena memories are now updated. Shall I commit, push, and create an MR?"
 
 If confirmed:
 ```bash
@@ -199,21 +216,33 @@ Do NOT clean up the worktree until the MR is actually merged.
 
 ## Memory Format Guidelines
 
-Serena memories are `.md` files. For agent-readability, prefer:
+Serena memories are `.md` files. **Every memory section MUST carry auditable metadata.**
+
+### Mandatory Metadata Per Section
+
+| Field | Format | Example | Why |
+|---|---|---|---|
+| Maturity level | `L0`-`L4` | `L2` | See BRAIN-role.md maturity table |
+| Session ID | `ses_xxx` | `ses_abc123` | Links to session that wrote/verified it |
+| Verified commit | full SHA | `a1b2c3d4e5f6...` | Commit HEAD when last verified |
+| Confidence | `high`/`medium`/`low` | `high` | Subjective certainty of the claim |
+
+### Format Rules
 
 - **Structured sections** with clear headers over narrative prose
 - **List format** for conventions, dependencies, configuration keys
 - **Symbol references** (e.g., `src/services/PaymentService.ts:42`) over vague descriptions
-- **Frontmatter metadata** — confidence, last verified commit, scope — when serena supports it
+- Each memory file starts with a **file-level metadata block** (maturity, session, scope)
 
 Bad: "The payment module handles all payment processing and was written in early 2025."
 Good:
 ```markdown
+> **Maturity:** L2 | **Session:** ses_abc123 | **Commit:** a1b2c3d
+
 ## Payment Module
 - **Entry point:** `src/services/PaymentService.ts:42` (class `PaymentService`)
 - **Key methods:** `processPayment`, `refundPayment`, `getStatus`
 - **Dependencies:** Stripe SDK v2.3, OrderService, AuditLogger
-- **Verified at:** a1b2c3d
 - **Confidence:** high
 ```
 
