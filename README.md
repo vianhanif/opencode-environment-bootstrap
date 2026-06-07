@@ -19,7 +19,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 | Layer | What | Files |
 |-------|------|-------|
-| **OpenCode** | 5 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin, handoff plugin | `~/.config/opencode/` |
+| **OpenCode** | 6 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, standalone `@brain` agent for repo knowledge management, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
 | **Zed** | Vim keybindings, LSP config, lean-ctx context rules | `~/.config/zed/` |
@@ -28,7 +28,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 ### Agent System — Multi-Agent Workflow with Enforcement
 
-The `/delegate` command orchestrates 5 specialized agents as an annotated DAG — write one message and let subagents execute in dependency order with full context sharing.
+The `/delegate` command orchestrates 5 agents as an annotated DAG — write one message and let subagents execute in dependency order with full context sharing. A 6th agent, `@brain`, runs standalone for repo knowledge bootstrapping.
 
 | Agent | Role | Enforces |
 |-------|------|----------|
@@ -37,6 +37,12 @@ The `/delegate` command orchestrates 5 specialized agents as an annotated DAG �
 | `@reviewer` | Validate diffs for correctness | MR confirmation, isolated worktree, post review to MR, cleanup |
 | `@tester` | Plan and execute tests | Isolated worktree (`~/.opencode-worktree/tester/`), cleanup |
 | `@analyzer` | Investigate issues and logs | Isolated worktree (`~/.opencode-worktree/analyzer/`), cleanup |
+
+**Standalone agent** — invoked directly, not via `/delegate`:
+
+| Agent | Role | Enforces |
+|-------|------|----------|
+| `@brain` | Serena-based repo knowledge manager | Main branch only, isolated worktree, 3-round Q&A validation, `.serena/` safety checks |
 
 **All enforcement steps use the `question` tool** — the AI asks, you confirm. Nothing is auto-evaluated. Every execution agent works in its own `git worktree` so your working directory stays clean.
 
