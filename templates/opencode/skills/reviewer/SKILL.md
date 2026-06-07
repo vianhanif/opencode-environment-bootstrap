@@ -11,6 +11,50 @@ description: Review diffs for correctness, risks, and consistency.
 
 ---
 
+## Git Worktree Enforcement
+
+**MANDATORY:** Enforce these steps in order. If shared context was provided at the top of the prompt, use those values.
+
+### 1. Confirm Git Worktree
+- Use `question` to ask: "What is the git repo path and the branch to review?"
+- Do NOT auto-run `git worktree list` or `git rev-parse` — ask explicitly
+- If not already checked out → create one after user confirms
+
+### 2. Confirm MR
+- Use `question` to ask: "Which MR (merge request) is being reviewed? Please provide the MR number or URL."
+- Confirm the MR belongs to the same git remote origin via explicit question
+
+### 3. Confirm Branch & Remote Target
+- Use `question` to ask: "What are the source branch and target branch for this review?"
+- Remote origin: confirm with user via question, not auto-detected
+
+### 4. Create Isolated Reviewing Worktree
+After user confirms all details, create a dedicated worktree for reviewing:
+
+```bash
+BRANCH_SOURCE={source-branch}
+BRANCH_TARGET={target-branch}
+WORKTREE_PATH=~/.opencode-worktree/reviewer/${BRANCH_TARGET}-to-${BRANCH_SOURCE}
+mkdir -p $(dirname "$WORKTREE_PATH")
+git worktree add "$WORKTREE_PATH" {remote}/${BRANCH_SOURCE}
+cd "$WORKTREE_PATH"
+```
+
+- All review (diff analysis, code reading) happens **inside this worktree**
+
+### 5. Clean Up Worktree
+Use `question` to ask user for explicit confirmation before removing the worktree:
+
+```bash
+cd $(git rev-parse --git-common-dir)/..
+git worktree remove --force "$WORKTREE_PATH"
+git worktree prune
+```
+
+**Do NOT skip cleanup.**
+
+---
+
 ## Pre-Review
 
 **If no code/diff provided → STOP.** Ask for changes.

@@ -9,6 +9,66 @@ description: Implement code changes incrementally per task documentation. Follow
 
 ---
 
+## Git Worktree Enforcement
+
+**MANDATORY:** Enforce these steps in order. If shared context was provided at the top of the prompt, use those values.
+
+### 1. Confirm Git Repository
+- Use `question` to ask: "Are you running this from within a git repository? If yes, what is the repo path?"
+- Do NOT auto-run `git rev-parse` — ask explicitly
+- Must have a confirmed repo path before proceeding
+
+### 2. Confirm Remote & Target Branch
+- Use `question` to ask: "What is the git remote origin and target branch for this work?"
+- If context was provided from delegate → still confirm with user via question
+- If user cannot provide → **STOP**, cannot proceed
+
+### 3. Create Isolated Worktree
+After user confirms, create a dedicated worktree for this work:
+
+```bash
+# Determine the worktree path
+WORKTREE_PATH=~/.opencode-worktree/coder/{branch-name}
+mkdir -p $(dirname "$WORKTREE_PATH")
+
+# Create the worktree (creates branch from the target base)
+git worktree add --track -b {branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
+
+# Work in the worktree
+cd "$WORKTREE_PATH"
+```
+
+- Branch name should follow: `feature/{ticket-id}-{short-description}` or `bugfix/{ticket-id}-{short-description}`
+- All coding happens **inside this worktree**
+
+### 4. Commit & Push
+After implementing changes, use `question` to ask user to confirm before committing and pushing:
+
+```bash
+git add .
+git commit -m "{type}: {short description}
+
+- Key change 1
+- Key change 2"
+git push -u {remote} {branch-name}
+```
+
+### 5. Clean Up Worktree
+Use `question` to ask user for explicit confirmation before removing the worktree:
+
+```bash
+# Return to main repo
+cd $(git rev-parse --git-common-dir)/..
+
+# Remove the worktree
+git worktree remove --force "$WORKTREE_PATH"
+git worktree prune
+```
+
+**Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
+
+---
+
 ## Pre-Coding Checklist
 
 ### 1. Task Documentation Required

@@ -42,6 +42,25 @@ Rules:
 3. **Do not mix concerns** — when in coder mode, fix only; when in tester mode, verify only
 4. **Sync the test plan** after each fix cycle to prevent result drift
 
+### Pre-Delegation Validation (`/delegate`)
+Before any delegation, the `/delegate` command enforces — using **explicit `question` tool** (never auto-evaluates):
+1. **Git repo is confirmed** — user is asked to confirm the repo path
+2. **Git remote origin is confirmed** — user is asked to confirm the remote origin URL
+3. **Target branch is confirmed** — user must specify the base branch
+4. **Ticket ID & summary is confirmed** — e.g. `PROJ-1234: short description`
+
+These values become **shared context** injected into every subagent's task prompt.
+
+### Subagent Worktree Enforcement
+Each execution agent enforces its own isolated worktree:
+
+| Agent | Worktree Path | Cleanup Trigger |
+|-------|--------------|----------------|
+| `@coder` | `~/.opencode-worktree/coder/{branch-name}/` | After commit + push |
+| `@tester` | `~/.opencode-worktree/tester/{branch-name}/` | After testing complete |
+| `@analyzer` | `~/.opencode-worktree/analyzer/{branch-name}/` | After analysis complete |
+| `@reviewer` | `~/.opencode-worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
+
 ### Delegation Annotations (Multi-Agent Workflow)
 Annotate tasks with role prefixes to delegate to role-specific subagents. The parent agent interprets these as a DAG, resolving dependencies and delegating in order.
 
