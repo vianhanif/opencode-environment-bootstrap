@@ -120,10 +120,12 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Invoke:** `/agent brain` only. `mode: "primary"` — not available via `/delegate`.
 
 **Enforcements:**
-1. **Phase 1 — Safety Check** — Validate `.serena/` exists, is NOT gitignored, is tracked by git, pushed to remote, has no uncommitted changes, and `onboard_project` has been run. Produces a shareability verdict before proceeding.
-2. **Phase 2 — Memory Audit** — Read all project-scoped memories and evaluate against an 8-section completeness checklist (architecture, key symbols, API contracts, data model, configuration, conventions, decision records, dependencies).
-3. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
-4. **Source Code Safety** — `edit: deny, write: deny` — cannot touch source files. Uses serena memory tools exclusively.
+1. **Main Branch Only** — Rejects feature/bugfix WIP branches. Must run from the confirmed main/default branch. Branch name is never hardcoded — always asked at session start.
+2. **Isolated Worktree (Always)** — `~/.opencode-worktree/brain/{main-branch}/` from `setup/brain-{date}`. Brain memories are version-controlled — they always go through a branch + commit + push cycle.
+3. **Phase 1 — Safety Check** — Validate `.serena/` exists, is NOT gitignored, is tracked by git, pushed to remote, has no uncommitted changes, and `onboard_project` has been run. Produces a shareability verdict before proceeding.
+4. **Phase 2 — Memory Audit** — Read all project-scoped memories and evaluate against an 8-section completeness checklist (architecture, key symbols, API contracts, data model, configuration, conventions, decision records, dependencies).
+5. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
+6. **Source Code Safety** — `edit: deny, write: deny` — cannot touch source files. Uses serena memory tools exclusively.
 
 **Model:** DeepSeek Reasoner / Kimi K2.5
 

@@ -61,6 +61,7 @@ Each execution agent enforces its own isolated worktree:
 | `@tester` | `~/.opencode-worktree/tester/{branch-name}/` | After testing complete |
 | `@analyzer` | `~/.opencode-worktree/analyzer/{branch-name}/` | After analysis complete |
 | `@reviewer` | `~/.opencode-worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
+| `@brain` | `~/.opencode-worktree/brain/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push |
 
 ### Delegation Annotations (Multi-Agent Workflow)
 Annotate tasks with role prefixes to delegate to role-specific subagents. The parent agent interprets these as a DAG, resolving dependencies and delegating in order.

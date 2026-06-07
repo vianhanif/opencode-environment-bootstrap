@@ -11,31 +11,58 @@ description: Enforce serena project setup, audit and validate repository memorie
 
 ---
 
-## Git & Protected Branch Enforcement
+## Git & Worktree Enforcement
 
-Before proceeding, **explicitly ask the user to confirm** each of the following using the `question` tool. Do NOT auto-evaluate.
+**MANDATORY:** Enforce these steps in order. Do NOT auto-evaluate — use the `question` tool for every confirmation.
 
 ### 1. Confirm Git Repository
 - Use `question` to ask: "Are you running this from within a git repository? If yes, what is the repo path?"
+- Must have a confirmed repo path before proceeding.
 
 ### 2. Confirm Git Remote Origin
 - Use `question` to ask: "What is the git remote origin URL for this repo?"
 
-### 3. Confirm Target Branch
-- Use `question` to ask: "Which branch should I target for serena memory evaluation? (e.g. `main`, `develop`)"
-- Default: `main`
+### 3. Confirm & Enforce Main Branch
+- Use `question` to ask: "What is the main/default branch for this repo? (e.g. `main`, `master`, `develop`, `aus-testing`)"
+- **Do NOT hardcode or assume** — always ask explicitly.
+- **Enforce:** Brain memories represent the canonical state of the repo. They must originate from the main branch, not a temporary WIP branch.
 
-### 4. Protected Branch Check
-- Use `question` to ask: "Is {target-branch} a protected branch?"
-- **If YES** — document `protectedBranch: true` in the session. All memory changes will go through a dedicated worktree branch + MR. Create the branch:
-  ```bash
-  WORKTREE_PATH=~/.opencode-worktree/brain/{target-branch}
-  mkdir -p $(dirname "$WORKTREE_PATH")
-  git worktree add --track -b setup/brain-{date} "$WORKTREE_PATH" {remote}/{target-branch}
-  cd "$WORKTREE_PATH"
-  ```
-- **If NO** — operate directly on the target branch.
-- All serena memory writes go to `.serena/` within the repo. **Document this decision at the top of the session output.**
+### 4. Reject WIP Branches
+- After the user confirms, check the current branch: `git branch --show-current`
+- If the current branch is a feature/bugfix branch (matches `feature/*`, `bugfix/*`, or does NOT match the confirmed main branch):
+  - **STOP.** Tell the user: "Brain must run from the main branch (`{main-branch}`), not a WIP branch. Please switch to `{main-branch}` and re-invoke `/agent brain`."
+  - Do NOT proceed. Do NOT create a worktree from a WIP branch.
+- If the current branch IS the main branch → proceed to create the isolated worktree.
+
+### 5. Create Isolated Worktree (Always)
+Brain memories go through a git branch + commit + push cycle — they are version-controlled changes. Always operate inside an isolated worktree to keep the main branch clean during auditing.
+
+After the user confirms the main branch, create a dedicated worktree:
+```bash
+WORKTREE_PATH=~/.opencode-worktree/brain/{main-branch}
+WORKTREE_BRANCH=setup/brain-{YYYYMMDD}
+mkdir -p $(dirname "$WORKTREE_PATH")
+git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-branch}
+cd "$WORKTREE_PATH"
+```
+- Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
+- All memory reads/writes happen **inside this worktree**
+- All serena memory writes go to `.serena/` within the repo
+
+### 6. Commit, Push, Clean Up
+After Phase 3 validation is complete, use `question` to ask user for explicit confirmation before:
+```bash
+git add .serena/
+git commit -m "docs: update serena project memories"
+git push -u {remote} "$WORKTREE_BRANCH"
+```
+Then clean up:
+```bash
+cd $(git rev-parse --git-common-dir)/..
+git worktree remove --force "$WORKTREE_PATH"
+git worktree prune
+```
+**Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
 
 ---
 
@@ -64,7 +91,7 @@ Run these checks in order. **Do not proceed to Phase 2 until every check passes.
   ```
 
 #### 4. `.serena/` is pushed to remote
-- Run `git diff --stat {remote}/{target-branch} -- .serena/` — must show no un-pushed changes
+- Run `git diff --stat {remote}/{main-branch} -- .serena/` — must show no un-pushed changes
 - If changes exist → push immediately:
   ```bash
   git push {remote} {current-branch}
@@ -140,16 +167,16 @@ Only after completing at least 3 rounds, move to the final gate.
 
 ### Final Confirmation Gate
 
-**STOP.** Ask: "The serena memories are now updated. Shall I commit and push?"
+**STOP.** Use `question` to ask: "The serena memories are now updated. Shall I commit and push?"
 
-For protected branches — open a MR instead:
+If confirmed:
 ```bash
 git add .serena/
-git commit -m "docs: refresh serena project memories"
-git push -u {remote} setup/brain-{date}
+git commit -m "docs: update serena project memories"
+git push -u {remote} "$WORKTREE_BRANCH"
 ```
 
-Then clean up the worktree:
+Then clean up the worktree (ask user first):
 ```bash
 cd $(git rev-parse --git-common-dir)/..
 git worktree remove --force "$WORKTREE_PATH"
@@ -183,11 +210,13 @@ Good:
 ## Rules
 
 1. **Never modify source code** — this agent writes only to `.serena/`
-2. **Use serena memory tools exclusively** — `write_memory`, `edit_memory`, `delete_memory`; do not use native file write/edit tools
-3. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
-4. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
-5. **Ask before assuming** — architectural intent lives in the team's head, not the code; surface ambiguity through `question`
-6. **Document protected branch status** at the top of every session
+2. **Operate from main branch only** — reject feature/bugfix WIP branches. Always ask, never hardcode the branch name.
+3. **Always use isolated worktree** — `~/.opencode-worktree/brain/{main-branch}/` with branch `setup/brain-{date}`
+4. **Use serena memory tools exclusively** — `write_memory`, `edit_memory`, `delete_memory`; do not use native file write/edit tools
+5. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
+6. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
+7. **Ask before assuming** — architectural intent lives in the team's head, not the code; surface ambiguity through `question`
+8. **Clean up worktree** — never leave orphan worktrees on disk
 
 ---
 
@@ -203,8 +232,11 @@ Good:
 ## Anti-Patterns
 
 - [ ] Modifying source code files
+- [ ] Running from a feature/bugfix WIP branch instead of main
+- [ ] Hardcoding the main branch name — always ask
+- [ ] Operating outside an isolated worktree
 - [ ] Writing memories without reading existing ones first
-- [ ] Skipping the protected branch check
 - [ ] Assuming architectural intent without asking
 - [ ] Producing narrative prose instead of structured agent-readable format
 - [ ] Ending before completing 3 rounds of Q&A
+- [ ] Leaving orphan worktrees on disk
