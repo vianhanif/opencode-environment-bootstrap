@@ -63,13 +63,13 @@
       },
       "type": "local"
     },
-    "metabase": {
+    "metabase-testing": {
       "command": [
         "npx",
         "-y",
         "@imlewc/metabase-server"
       ],
-      "enabled": false,
+      "enabled": true,
       "environment": {
         "METABASE_PASSWORD": "$METABASE_PASS",
         "METABASE_URL": "$METABASE_URL",
