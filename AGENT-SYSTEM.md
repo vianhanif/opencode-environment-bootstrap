@@ -74,7 +74,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 **Enforcements:**
 1. **Plan-First Rule** — If no planned doc/scope provided → STOP and enforce asking to use `@planner` first
-2. **Isolated Worktree** — `~/.opencode-worktree/coder/{repo}/{branch-name}/`
+2. **Isolated Worktree** — `{repo-root}/.worktree/coder/{source-branch-name}/`
 3. **Commit & Push** to targeted remote
 4. **Cleanup** — Remove worktree after push (user confirmed)
 
@@ -87,7 +87,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Enforcements:**
 1. **Confirm MR** — Explicitly ask for MR number/URL and verify remote
 2. **Confirm Branches** — Source and target branch via `question`
-3. **Isolated Worktree** — `~/.opencode-worktree/reviewer/{repo}/{target}-to-{source}/`
+3. **Isolated Worktree** — `{repo-root}/.worktree/reviewer/{target}-to-{source}/`
 4. **Post to MR** — Via `git-review-cli` or `glab`
 5. **Cleanup** — Remove worktree after review posted
 
@@ -98,7 +98,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Purpose:** Assist with manual testing scenarios and test planning.
 
 **Enforcements:**
-1. **Isolated Worktree** — `~/.opencode-worktree/tester/{repo}/{branch-name}/`
+1. **Isolated Worktree** — `{repo-root}/.worktree/tester/{source-branch-name}/`
 2. **Document Test Results** — Record findings, then suggest switching to planner/coder mode to fix discovered bugs
 3. **Cleanup** — Remove worktree after testing complete
 
@@ -107,7 +107,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Purpose:** Investigate issues, trace code paths, analyze logs.
 
 **Enforcements:**
-1. **Isolated Worktree** — `~/.opencode-worktree/analyzer/{repo}/{branch-name}/`
+1. **Isolated Worktree** — `{repo-root}/.worktree/analyzer/{source-branch-name}/`
 2. **Document Root Cause** — Record findings and recommended actions, then suggest switching to planner/coder mode to implement fixes
 3. **Cleanup** — Remove worktree after analysis complete
 
@@ -121,7 +121,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 **Enforcements:**
 1. **Main Branch Only** — Rejects feature/bugfix WIP branches. Must run from the confirmed main/default branch. Branch name is never hardcoded — always asked at session start.
-2. **Isolated Worktree (Always)** — `~/.opencode-worktree/brain/{repo}/{main-branch}/` from `setup/brain-{date}`. Brain memories are version-controlled — they always go through a branch + commit + push cycle.
+2. **Isolated Worktree (Always)** — `{repo-root}/.worktree/brain/{source-branch-name}/` from `setup/brain-{date}`. Brain memories are version-controlled — they always go through a branch + commit + push cycle.
 3. **Phase 1 — Safety Check** — Validate `.serena/` exists, is NOT gitignored, is tracked by git, pushed to remote, has no uncommitted changes, and `onboard_project` has been run. Produces a shareability verdict before proceeding.
 4. **Phase 2 — Memory Audit** — Read all project-scoped memories and evaluate against an 8-section completeness checklist (architecture, key symbols, API contracts, data model, configuration, conventions, decision records, dependencies).
 5. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
@@ -135,11 +135,11 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 | Agent | Worktree Path | Cleanup Trigger |
 |-------|--------------|----------------|
-| `@coder` | `~/.opencode-worktree/coder/{repo}/{branch-name}/` | After commit + push |
-| `@tester` | `~/.opencode-worktree/tester/{repo}/{branch-name}/` | After testing complete |
-| `@analyzer` | `~/.opencode-worktree/analyzer/{repo}/{branch-name}/` | After analysis complete |
-| `@reviewer` | `~/.opencode-worktree/reviewer/{repo}/{target}-to-{source}/` | After review posted to MR |
-| `@brain` | `~/.opencode-worktree/brain/{repo}/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push or MR |
+| `@coder` | `{repo-root}/.worktree/coder/{source-branch-name}/` | After commit + push |
+| `@tester` | `{repo-root}/.worktree/tester/{source-branch-name}/` | After testing complete |
+| `@analyzer` | `{repo-root}/.worktree/analyzer/{source-branch-name}/` | After analysis complete |
+| `@reviewer` | `{repo-root}/.worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
+| `@brain` | `{repo-root}/.worktree/brain/{source-branch-name}/` | After commit + push or MR |
 
 All enforcement steps use the `question` tool for explicit user confirmation — nothing is auto-evaluated.
 

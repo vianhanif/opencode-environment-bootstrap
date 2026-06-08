@@ -27,19 +27,18 @@ description: Implement code changes incrementally per task documentation. Follow
 After user confirms, create a dedicated worktree for this work:
 
 ```bash
-# Determine the worktree path
-WORKTREE_PATH=~/.opencode-worktree/coder/{repo}/{branch-name}
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORKTREE_PATH="${REPO_ROOT}/.worktree/coder/{source-branch-name}"
 mkdir -p $(dirname "$WORKTREE_PATH")
+echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
 
 # Create the worktree (creates branch from the target base)
-git worktree add --track -b {branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
-
-# Work in the worktree
-cd "$WORKTREE_PATH"
+git worktree add --track -b {source-branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
 ```
 
 - Branch name should follow: `feature/{ticket-id}-{short-description}` or `bugfix/{ticket-id}-{short-description}`
 - All coding happens **inside this worktree**
+- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
 
 ### 4. Commit & Push
 After implementing changes, use `question` to ask user to confirm before committing and pushing:
@@ -50,7 +49,7 @@ git commit -m "{type}: {short description}
 
 - Key change 1
 - Key change 2"
-git push -u {remote} {branch-name}
+git push -u {remote} {source-branch-name}
 ```
 
 ### 5. Clean Up Worktree
@@ -129,6 +128,14 @@ Enter CODER mode:
 8. **Composition > Inheritance**
 9. **Comments Explain Why** - Not what
 10. **Good Commit Messages**
+
+---
+
+## Tool Restrictions
+
+- Do **NOT** use the `sequential-thinking` MCP tool during implementation
+- If you encounter ambiguity, make the best decision and continue — do not over-analyze
+- You can flag risks in output without decomposing them into thought steps
 
 ---
 

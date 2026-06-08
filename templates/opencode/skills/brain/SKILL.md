@@ -99,11 +99,12 @@ If any check fails, its row shows ❌ and the fix action. **Do not proceed until
 After Phase 1 passes, create an isolated worktree. Brain memories go through a git branch + commit + push cycle — always operate inside an isolated worktree to keep the main branch clean.
 
 ```bash
-WORKTREE_PATH=~/.opencode-worktree/brain/{repo}/{main-branch}
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORKTREE_PATH="$REPO_ROOT/.worktree/brain/{source-branch-name}"
 WORKTREE_BRANCH=setup/brain-{YYYYMMDD}
-mkdir -p $(dirname "$WORKTREE_PATH")
+mkdir -p "$(dirname "$WORKTREE_PATH")"
+echo ".worktree/" >> "$REPO_ROOT/.gitignore"
 git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-branch}
-cd "$WORKTREE_PATH"
 ```
 - Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
 - **Reading memories**: Use serena MCP tools (`serena_read_memory`, `serena_list_memories`). They read from the original repo — fine, read-only is not a problem.
@@ -276,12 +277,24 @@ Good:
 
 1. **Never modify source code** — this agent writes only to `.serena/`
 2. **Operate from main branch only** — reject feature/bugfix WIP branches. Always ask, never hardcode the branch name.
-3. **Always use isolated worktree** — `~/.opencode-worktree/brain/{repo}/{main-branch}/` with branch `setup/brain-{date}`
+3. **Always use isolated worktree** — `{repo-root}/.worktree/brain/{source-branch-name}/` with branch `setup/brain-{date}`
 4. **Use serena tools only for reading** — use `serena_read_memory` / `serena_list_memories` for reading existing memories. For writing, use native file operations (`write`, `edit`) targeting the worktree path. Never use `serena_write_memory` / `serena_edit_memory` — those write to the original repo, breaking worktree isolation.
 5. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
 6. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
 7. **Read code first, ask to confirm** — read the code to form a hypothesis before using `question`. Questions should validate findings from the codebase, not ask for basic facts the code can reveal. Use `question` only for: (a) confirming intent the code can't express, (b) filling gaps the code can't answer, (c) flagging ambiguity between what the code does and what the team intends.
 8. **Clean up worktree** — never leave orphan worktrees on disk
+
+---
+
+## Sequential Thinking
+
+Use `sequential-thinking` MCP **only** for contradiction analysis, cross-repo consistency auditing, and knowledge evolution tracking. Do NOT use for routine memory validation or simple fact-checking.
+
+Rules:
+- Max **5 thoughts** per invocation — no infinite chains
+- **No revisions** — commit and move forward
+- **No branching** — linear chain only
+- If unsure after 5 thoughts, ask the user clarifying questions to proceed
 
 ---
 

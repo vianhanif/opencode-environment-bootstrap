@@ -11,6 +11,17 @@ description: Plan and document engineering tasks before coding. Gather requireme
 
 ---
 
+## Lean-Ctx Worktree Awareness
+
+When using `ctx_*` tools during planning (reading code, searching patterns):
+- If operating in a worktree → always use absolute paths with `{WORKTREE_PATH}` prefix and pass `cwd` to `ctx_shell`
+- If operating in the main repo checkout → confirm `REPO_ROOT=$(git rev-parse --show-toplevel)` and use `{REPO_ROOT}` prefix for all `ctx_*` calls
+- Never use bare relative paths like `ctx_read("go.mod")` — resolve through `{REPO_ROOT}` or `{WORKTREE_PATH}` first
+
+---
+
+
+
 ## Git & Context Enforcement
 
 Before any planning, **explicitly ask the user to confirm** each of the following using the `question` tool. Do NOT auto-evaluate. If context was provided by delegate (see shared context at top of prompt), confirm it with user via question instead of silently accepting.
@@ -109,6 +120,18 @@ Only after completing at least 3 rounds, move to the final gate.
 ### 6. Final Confirmation Gate
 
 **STOP.** Do not proceed to coding until engineer explicitly confirms the final documentation.
+
+---
+
+## Sequential Thinking
+
+Use `sequential-thinking` MCP **only** for large refactors, migrations, architectural changes, or highly ambiguous tasks. Do NOT use for simple bugfixes, CRUD work, or isolated file edits.
+
+Rules:
+- Max **5 thoughts** per invocation — no infinite chains
+- **No revisions** — commit and move forward
+- **No branching** — linear chain only
+- If unsure after 5 thoughts, ask the user clarifying questions to proceed
 
 ---
 

@@ -29,13 +29,15 @@ description: Investigate issues, trace code paths, analyze logs, and document ro
 After user confirms, create a dedicated worktree for analysis:
 
 ```bash
-WORKTREE_PATH=~/.opencode-worktree/analyzer/{repo}/{branch-name}
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORKTREE_PATH="${REPO_ROOT}/.worktree/analyzer/{source-branch-name}"
 mkdir -p $(dirname "$WORKTREE_PATH")
-git worktree add --track -b {branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
-cd "$WORKTREE_PATH"
+echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
+git worktree add --track -b {source-branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
 ```
 
 - All analysis (code reading, log investigation) happens **inside this worktree**
+- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
 
 ### 4. Push Changes (if any fixes applied)
 Use `question` to ask user for explicit confirmation before committing and pushing:
@@ -43,7 +45,7 @@ Use `question` to ask user for explicit confirmation before committing and pushi
 ```bash
 git add .
 git commit -m "fix: {description}"
-git push -u {remote} {branch-name}
+git push -u {remote} {source-branch-name}
 ```
 
 ### 5. Clean Up Worktree
@@ -121,6 +123,18 @@ For **production** — use kubectl context switch directly. Use your logging too
 4. **Never write production code** — analysis mode reads, traces, and documents only
 5. **Document as you go** — the doc is a living artifact, updated per finding
 6. **Record disproven hypotheses explicitly** — negative results prevent re-treading
+
+---
+
+## Sequential Thinking
+
+Use `sequential-thinking` MCP for branching hypothesis analysis, root cause tracing, and evidence gathering. This is naturally aligned with analysis work.
+
+Rules:
+- Max **5 thoughts** per invocation — no infinite chains
+- **No revisions** — commit and move forward
+- **No branching** — linear chain only
+- If unsure after 5 thoughts, ask the user clarifying questions to proceed
 
 ---
 

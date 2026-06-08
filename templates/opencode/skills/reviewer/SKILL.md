@@ -36,13 +36,15 @@ After user confirms all details, create a dedicated worktree for reviewing.
 ```bash
 BRANCH_SOURCE={source-branch}
 BRANCH_TARGET={target-branch}
-WORKTREE_PATH=~/.opencode-worktree/reviewer/${REPO}/${BRANCH_TARGET}-to-${BRANCH_SOURCE}
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORKTREE_PATH="${REPO_ROOT}/.worktree/reviewer/${BRANCH_TARGET}-to-${BRANCH_SOURCE}"
 mkdir -p $(dirname "$WORKTREE_PATH")
+echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
 git worktree add "$WORKTREE_PATH" {remote}/${BRANCH_SOURCE}
-cd "$WORKTREE_PATH"
 ```
 
 - All review (diff analysis, code reading) happens **inside this worktree**
+- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
 
 ### 5. Clean Up Worktree
 Use `question` to ask user for explicit confirmation before removing the worktree.
@@ -273,6 +275,19 @@ Include in your comment:
 - **DO analyze complex conditional logic thoroughly**
 - **DO explicitly note verified non-issues** (e.g., "✅ No signature changes, callers unaffected"; "✅ No breaking changes detected")
 - **DO NOT comment on changes not part of MR commits** — verify file ownership via `git log mr-branch --not base-branch --oneline -- <file>` before flagging any finding on that file
+
+---
+
+## Sequential Thinking
+
+Use `sequential-thinking` MCP **only** for complex diffs with cross-cutting concerns, dependency chain analysis, or architectural risk evaluation. Do NOT use for simple or straightforward diffs.
+
+Rules:
+- Max **5 thoughts** per invocation — no infinite chains
+- **No revisions** — commit and move forward
+- **No branching** — linear chain only
+- If unsure after 5 thoughts, ask the user clarifying questions to proceed
+- **Do NOT run tests locally if CI is green** — sequential-thinking should not override this rule
 
 ---
 
