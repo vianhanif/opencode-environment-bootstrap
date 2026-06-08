@@ -33,10 +33,10 @@ The `/delegate` command orchestrates 5 agents as an annotated DAG — write one 
 | Agent | Role | Enforces |
 |-------|------|----------|
 | `@planner` | Document tasks before coding | Git context, 3-round validation loop, per-scope target branches |
-| `@coder` | Implement changes per spec | Plan-first rule, isolated worktree (`~/.opencode-worktree/coder/`), commit/push, cleanup |
+| `@coder` | Implement changes per spec | Plan-first rule, isolated worktree (`~/.opencode-worktree/coder/{repo}/`), commit/push, cleanup |
 | `@reviewer` | Validate diffs for correctness | MR confirmation, isolated worktree, post review to MR, cleanup |
-| `@tester` | Plan and execute tests | Isolated worktree (`~/.opencode-worktree/tester/`), cleanup |
-| `@analyzer` | Investigate issues and logs | Isolated worktree (`~/.opencode-worktree/analyzer/`), cleanup |
+| `@tester` | Plan and execute tests | Isolated worktree (`~/.opencode-worktree/tester/{repo}/`), cleanup |
+| `@analyzer` | Investigate issues and logs | Isolated worktree (`~/.opencode-worktree/analyzer/{repo}/`), cleanup |
 
 **Standalone agent** — invoked directly, not via `/delegate`:
 

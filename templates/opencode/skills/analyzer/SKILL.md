@@ -29,7 +29,7 @@ description: Investigate issues, trace code paths, analyze logs, and document ro
 After user confirms, create a dedicated worktree for analysis:
 
 ```bash
-WORKTREE_PATH=~/.opencode-worktree/analyzer/{branch-name}
+WORKTREE_PATH=~/.opencode-worktree/analyzer/{repo}/{branch-name}
 mkdir -p $(dirname "$WORKTREE_PATH")
 git worktree add --track -b {branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
 cd "$WORKTREE_PATH"

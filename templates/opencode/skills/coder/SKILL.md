@@ -28,7 +28,7 @@ After user confirms, create a dedicated worktree for this work:
 
 ```bash
 # Determine the worktree path
-WORKTREE_PATH=~/.opencode-worktree/coder/{branch-name}
+WORKTREE_PATH=~/.opencode-worktree/coder/{repo}/{branch-name}
 mkdir -p $(dirname "$WORKTREE_PATH")
 
 # Create the worktree (creates branch from the target base)

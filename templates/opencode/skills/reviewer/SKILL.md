@@ -29,12 +29,14 @@ description: Review diffs for correctness, risks, and consistency.
 - Remote origin: confirm with user via question, not auto-detected
 
 ### 4. Create Isolated Reviewing Worktree
-After user confirms all details, create a dedicated worktree for reviewing:
+After user confirms all details, create a dedicated worktree for reviewing.
+
+**IMPORTANT:** Use native `bash` (not `ctx_shell`) for multi-statement scripts with variable assignments. `ctx_shell` runs commands in a subshell that does not inherit parent shell variables — single quotes `'...'` prevent expansion and double quotes `"..."` inline secrets.
 
 ```bash
 BRANCH_SOURCE={source-branch}
 BRANCH_TARGET={target-branch}
-WORKTREE_PATH=~/.opencode-worktree/reviewer/${BRANCH_TARGET}-to-${BRANCH_SOURCE}
+WORKTREE_PATH=~/.opencode-worktree/reviewer/${REPO}/${BRANCH_TARGET}-to-${BRANCH_SOURCE}
 mkdir -p $(dirname "$WORKTREE_PATH")
 git worktree add "$WORKTREE_PATH" {remote}/${BRANCH_SOURCE}
 cd "$WORKTREE_PATH"
@@ -43,7 +45,9 @@ cd "$WORKTREE_PATH"
 - All review (diff analysis, code reading) happens **inside this worktree**
 
 ### 5. Clean Up Worktree
-Use `question` to ask user for explicit confirmation before removing the worktree:
+Use `question` to ask user for explicit confirmation before removing the worktree.
+
+**Use native `bash`** (not `ctx_shell`) for the same reason as above.
 
 ```bash
 cd $(git rev-parse --git-common-dir)/..

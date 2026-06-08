@@ -60,11 +60,13 @@ Each execution agent enforces its own isolated worktree:
 
 | Agent | Worktree Path | Cleanup Trigger |
 |-------|--------------|----------------|
-| `@coder` | `~/.opencode-worktree/coder/{branch-name}/` | After commit + push |
-| `@tester` | `~/.opencode-worktree/tester/{branch-name}/` | After testing complete |
-| `@analyzer` | `~/.opencode-worktree/analyzer/{branch-name}/` | After analysis complete |
-| `@reviewer` | `~/.opencode-worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
-| `@brain` | `~/.opencode-worktree/brain/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push |
+| `@coder` | `~/.opencode-worktree/coder/{repo}/{branch-name}/` | After commit + push |
+| `@tester` | `~/.opencode-worktree/tester/{repo}/{branch-name}/` | After testing complete |
+| `@analyzer` | `~/.opencode-worktree/analyzer/{repo}/{branch-name}/` | After analysis complete |
+| `@reviewer` | `~/.opencode-worktree/reviewer/{repo}/{target}-to-{source}/` | After review posted to MR |
+| `@brain` | `~/.opencode-worktree/brain/{repo}/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push |
+
+> `{repo}` is the repository folder name (e.g., `core`, `api`). This enables running multiple repo sessions in parallel under the same agent type — e.g., `~/.opencode-worktree/brain/core/main/` and `~/.opencode-worktree/brain/api/main/`.
 
 ### Delegation Annotations (Multi-Agent Workflow)
 Annotate tasks with role prefixes to delegate to role-specific subagents. The parent agent interprets these as a DAG, resolving dependencies and delegating in order.
@@ -140,12 +142,17 @@ Models are defined in `opencode.json` per agent. Do not override in SKILL.md.
 ---
 
 ## Read First
-- `PLANNER-role.md` - Full workflow rules
-- `CODER-role.md` - Implementation rules + 10 coding principles
-- `REVIEWER-role.md` - Review checklist
-- `TESTER-role.md` - Testing guidelines
-- `ANALYZER-role.md` - Investigation workflow and root cause analysis
-- `BRAIN-role.md` - Serena memory enforcement and knowledge strengthening rules
+
+Each role has a dedicated doc covering its lifecycle, rules, and outputs:
+
+| Doc | Sections | Role |
+|-----|----------|------|
+| `PLANNER-role.md` | Ticket Confirmation → Requirement Breakdown → Validation → Branch Sources → File Naming → Structure → Confirmation Gate → Branching → Incremental Coding → Coding Standards → Safety Rules → Commit Format → MR Requirements | Planner |
+| `CODER-role.md` | Purpose → Activation → Pre-Coding Requirements → Change Strategy → Coding Execution → 10 Coding Principles → Testing & Validation → Model → General Rules → Context Management | Coder |
+| `REVIEWER-role.md` | Purpose → Activation → Pre-Review Requirements → Review Checklist → Output Format → Enhanced Checks → Constraints → Model → Post-Review | Reviewer |
+| `TESTER-role.md` | Purpose → Testing Philosophy → AI Role → Manual Testing Process → Test Scenarios by Change Type → Checklist → Documentation → Common Mistakes → Mode Handoff Protocol → Data Verification Tools → Post-Testing → Automated Testing Collab | Tester |
+| `ANALYZER-role.md` | Purpose → When to Use → Initial Triage → Phase 1 Triage → Phase 2 Discover → Phase 3 Trace → Phase 4 Conclude → Phase 5 Surface Actions → Rules | Analyzer |
+| `BRAIN-role.md` | Progressive Understanding (Session Journal, Maturity Levels, Change-Driven Plans, Progressive Questions) → Memory Quality Standards (Format, Staleness, 8-Section Checklist) → Agent Integration | Brain |
 
 ---
 
@@ -366,7 +373,8 @@ pod-app-list   # Returns sorted, deduplicated app names
 |------------|-----|---------|
 | Read/cat/head/tail | `ctx_read(path, mode)` | `ctx_read("src/main.rs", "full")` |
 | Grep/rg/find | `ctx_search(pattern, path)` | `ctx_search("fn handle", "src/")` |
-| Shell/bash | `ctx_shell(command)` | `ctx_shell("cargo test")` |
+| Shell/bash (single command) | `ctx_shell(command)` | `ctx_shell("cargo test")` |
+| Shell scripts (multi-statement, variable assignments) | `bash` | worktree creation, cleanup scripts |
 | Edit (when Read unavailable) | `ctx_edit(path, old, new)` | `ctx_edit("f.rs", "old", "new")` |
 
 ## ctx_read Mode Selection

@@ -28,7 +28,7 @@ description: Assist with manual testing scenarios and test planning. Guide the e
 After user confirms, create a dedicated worktree for testing:
 
 ```bash
-WORKTREE_PATH=~/.opencode-worktree/tester/{branch-name}
+WORKTREE_PATH=~/.opencode-worktree/tester/{repo}/{branch-name}
 mkdir -p $(dirname "$WORKTREE_PATH")
 git worktree add --track -b {branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
 cd "$WORKTREE_PATH"

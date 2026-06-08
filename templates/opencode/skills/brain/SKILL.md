@@ -99,7 +99,7 @@ If any check fails, its row shows ❌ and the fix action. **Do not proceed until
 After Phase 1 passes, create an isolated worktree. Brain memories go through a git branch + commit + push cycle — always operate inside an isolated worktree to keep the main branch clean.
 
 ```bash
-WORKTREE_PATH=~/.opencode-worktree/brain/{main-branch}
+WORKTREE_PATH=~/.opencode-worktree/brain/{repo}/{main-branch}
 WORKTREE_BRANCH=setup/brain-{YYYYMMDD}
 mkdir -p $(dirname "$WORKTREE_PATH")
 git worktree add --track -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" {remote}/{main-branch}
@@ -276,7 +276,7 @@ Good:
 
 1. **Never modify source code** — this agent writes only to `.serena/`
 2. **Operate from main branch only** — reject feature/bugfix WIP branches. Always ask, never hardcode the branch name.
-3. **Always use isolated worktree** — `~/.opencode-worktree/brain/{main-branch}/` with branch `setup/brain-{date}`
+3. **Always use isolated worktree** — `~/.opencode-worktree/brain/{repo}/{main-branch}/` with branch `setup/brain-{date}`
 4. **Use serena tools only for reading** — use `serena_read_memory` / `serena_list_memories` for reading existing memories. For writing, use native file operations (`write`, `edit`) targeting the worktree path. Never use `serena_write_memory` / `serena_edit_memory` — those write to the original repo, breaking worktree isolation.
 5. **Balance breadth with depth** — document what agents need to navigate and decide, not every function body
 6. **Flag stale claims explicitly** — a memory that contradicts current code is worse than no memory
