@@ -64,7 +64,7 @@ Each execution agent enforces its own isolated worktree:
 | `@tester` | `~/.opencode-worktree/tester/{repo}/{branch-name}/` | After testing complete |
 | `@analyzer` | `~/.opencode-worktree/analyzer/{repo}/{branch-name}/` | After analysis complete |
 | `@reviewer` | `~/.opencode-worktree/reviewer/{repo}/{target}-to-{source}/` | After review posted to MR |
-| `@brain` | `~/.opencode-worktree/brain/{repo}/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push |
+| `@brain` | `~/.opencode-worktree/brain/{repo}/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push or MR |
 
 > `{repo}` is the repository folder name (e.g., `core`, `api`). This enables running multiple repo sessions in parallel under the same agent type — e.g., `~/.opencode-worktree/brain/core/main/` and `~/.opencode-worktree/brain/api/main/`.
 

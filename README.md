@@ -19,7 +19,7 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 | Layer | What | Files |
 |-------|------|-------|
-| **OpenCode** | 6 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, standalone `@brain` agent for repo knowledge management, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), lean-ctx plugin | `~/.config/opencode/` |
+| **OpenCode** | 6 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, standalone `@brain` agent for repo knowledge management, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), plugins (lean-ctx, caveman, delegate-placeholders) | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
 | **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
 | **Zed** | Vim keybindings, LSP config, lean-ctx context rules | `~/.config/zed/` |
@@ -35,8 +35,8 @@ The `/delegate` command orchestrates 5 agents as an annotated DAG — write one 
 | `@planner` | Document tasks before coding | Git context, 3-round validation loop, per-scope target branches |
 | `@coder` | Implement changes per spec | Plan-first rule, isolated worktree (`~/.opencode-worktree/coder/{repo}/`), commit/push, cleanup |
 | `@reviewer` | Validate diffs for correctness | MR confirmation, isolated worktree, post review to MR, cleanup |
-| `@tester` | Plan and execute tests | Isolated worktree (`~/.opencode-worktree/tester/{repo}/`), cleanup |
-| `@analyzer` | Investigate issues and logs | Isolated worktree (`~/.opencode-worktree/analyzer/{repo}/`), cleanup |
+| `@tester` | Plan and execute tests | Isolated worktree, document results, suggest mode switch to planner/coder for fixes, cleanup |
+| `@analyzer` | Investigate issues and logs | Isolated worktree, document root cause, suggest mode switch to planner/coder for fixes, cleanup |
 
 **Standalone agent** — invoked directly, not via `/delegate`:
 

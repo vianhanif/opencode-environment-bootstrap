@@ -112,7 +112,8 @@
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "allow"
       }
     },
     "coder": {
@@ -123,7 +124,8 @@
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "allow"
       }
     },
     "reviewer": {
@@ -134,7 +136,8 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "allow"
       }
     },
     "tester": {
@@ -143,7 +146,10 @@
       "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./skills/tester/SKILL.md}",
       "permission": {
-        "bash": "allow"
+        "edit": "allow",
+        "write": "allow",
+        "bash": "allow",
+        "question": "allow"
       }
     },
     "analyzer": {
@@ -154,7 +160,8 @@
       "permission": {
         "edit": "allow",
         "write": "allow",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "allow"
       }
     },
     "brain": {
@@ -165,7 +172,8 @@
       "permission": {
         "edit": "deny",
         "write": "deny",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "allow"
       }
     }
   },

@@ -99,7 +99,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 **Enforcements:**
 1. **Isolated Worktree** — `~/.opencode-worktree/tester/{repo}/{branch-name}/`
-2. **Push fixes** if discovered during testing
+2. **Document Test Results** — Record findings, then suggest switching to planner/coder mode to fix discovered bugs
 3. **Cleanup** — Remove worktree after testing complete
 
 ### Analyzer (`@analyzer`)
@@ -108,7 +108,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 **Enforcements:**
 1. **Isolated Worktree** — `~/.opencode-worktree/analyzer/{repo}/{branch-name}/`
-2. **Push fixes** if discovered during analysis
+2. **Document Root Cause** — Record findings and recommended actions, then suggest switching to planner/coder mode to implement fixes
 3. **Cleanup** — Remove worktree after analysis complete
 
 **Model:** deepseek v4 pro
@@ -139,7 +139,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 | `@tester` | `~/.opencode-worktree/tester/{repo}/{branch-name}/` | After testing complete |
 | `@analyzer` | `~/.opencode-worktree/analyzer/{repo}/{branch-name}/` | After analysis complete |
 | `@reviewer` | `~/.opencode-worktree/reviewer/{repo}/{target}-to-{source}/` | After review posted to MR |
-| `@brain` | `~/.opencode-worktree/brain/{repo}/{target-branch}/` (protected branches only) | After commit + push or MR |
+| `@brain` | `~/.opencode-worktree/brain/{repo}/{main-branch}/` (always, from `setup/brain-{date}`) | After commit + push or MR |
 
 All enforcement steps use the `question` tool for explicit user confirmation — nothing is auto-evaluated.
 
@@ -174,7 +174,7 @@ All enforcement steps use the `question` tool for explicit user confirmation —
 ```
 templates/opencode/
 ├── opencode.json              # Agent & MCP definitions
-├── AGENTS.md                  # Configuration instructions
+├── AGENTS.md                  # Agent workflow rules, lean-ctx tool mappings, session structure, commit formats
 ├── commands/
 │   ├── delegate.md            # /delegate command definition
 │   ├── caveman.md             # Quick commit/review helper
