@@ -417,10 +417,36 @@ def ensure_glab(vars, dry_run=False):
     except subprocess.CalledProcessError:
         warn("glab install failed. Retry: brew install glab")
 
+def _is_python_git_review_cli(path):
+    """Check if the given git-review-cli is the Python version (not Node.js)."""
+    try:
+        result = subprocess.run(
+            [str(path), "--version"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return "git-review-cli" in result.stdout and result.returncode == 0
+    except Exception:
+        return False
+
+def _remove_conflicting_git_review_cli(dry_run=False):
+    """Remove any non-Python git-review-cli that would shadow the pip install."""
+    for loc in ["/usr/local/bin/git-review-cli", "/usr/local/lib/node_modules/git-review-cli"]:
+        p = Path(loc)
+        if p.exists() or p.is_symlink():
+            if dry_run:
+                info(f"[dry-run] Would remove conflicting {loc}")
+            else:
+                info(f"Removing conflicting {loc} (non-Python git-review-cli)")
+                p.unlink(missing_ok=True)
+
 def ensure_git_review_cli(vars, dry_run=False):
     """Install git-review-cli via pip and symlink to ~/.local/bin."""
-    if shutil.which("git-review-cli"):
-        return
+    existing = shutil.which("git-review-cli")
+    if existing:
+        if _is_python_git_review_cli(existing):
+            return
+        info(f"Found non-Python git-review-cli at {existing} — will reinstall")
+        _remove_conflicting_git_review_cli(dry_run)
     step("Dev tool: git-review-cli")
     if dry_run:
         info("[dry-run] Would pip install git-review-cli")
@@ -826,6 +852,8 @@ CLEAN_PATHS = [
     Path.home() / ".config" / "zed" / "rules",
     Path.home() / ".config" / "ghostty" / "config",
     Path.home() / "Library" / "Application Support" / "Bruno",
+    Path("/usr/local/bin/git-review-cli"),
+    Path("/usr/local/lib/node_modules/git-review-cli"),
     Path.home() / ".local" / "bin" / "git-review-cli",
     Path.home() / ".local" / "bin" / "kubectl-multi-logs",
     Path.home() / ".local" / "bin" / "opencode-session",
