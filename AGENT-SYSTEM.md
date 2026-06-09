@@ -76,7 +76,8 @@ Then re-run bootstrap to bake new values into `opencode.json`:
 
 ```bash
 source ~/.zshrc
-curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | bash
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --config /path/to/local-config.json
 ```
 
 ### Planner (`@planner`)
