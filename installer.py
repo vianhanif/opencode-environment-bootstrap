@@ -1017,7 +1017,12 @@ def main():
     parser.add_argument("--restore-snapshot", metavar="FILE", help="Restore snapshot after deployment")
     parser.add_argument("--clean", action="store_true", help="Remove managed configs before install")
     parser.add_argument("--verify", action="store_true", help="Run comprehensive installation verification")
+    parser.add_argument("--version", action="store_true", help="Print bootstrap version and exit")
     args = parser.parse_args()
+
+    if args.version:
+        print(BOOTSTRAP_VERSION)
+        return
 
     if args.dry_run:
         print("◈ DRY RUN — no files will be modified ◈")

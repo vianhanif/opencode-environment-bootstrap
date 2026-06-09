@@ -4,6 +4,14 @@ set -euo pipefail
 REPO="https://github.com/vianhanif/opencode-environment-bootstrap"
 NAME="opencode-bootstrap"
 
+# Handle --version without downloading
+for arg in "$@"; do
+  if [[ "$arg" == "--version" ]]; then
+    curl -fsSL "$REPO/raw/main/VERSION" 2>/dev/null || echo "unknown"
+    exit 0
+  fi
+done
+
 if ! command -v python3 &>/dev/null; then
   echo "Error: Python 3 is required. Install it first:"
   echo "  brew install python3"
