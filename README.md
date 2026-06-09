@@ -322,6 +322,10 @@ templates/         ← Mirror of target file structure, uses $VAR substitution
 
 Template files use Python `string.Template` syntax (`$VAR`). Variables are substituted at deploy time from environment variables, a config file, or interactive prompts. No external Python dependencies — stdlib only.
 
+## Wiki
+
+- [Architecture Evaluation](https://github.com/vianhanif/opencode-environment-bootstrap/wiki/Architecture-Evaluation) — analysis of code installation structure scalability, CLI adapter feasibility, and multi-agent DAG portability across OpenCode, Claude CLI, and Copilot CLI.
+
 ## Development
 
 ```bash
