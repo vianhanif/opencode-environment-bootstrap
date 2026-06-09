@@ -218,6 +218,73 @@ If a codebase indexing MCP (e.g., Serena) is configured, run onboarding on first
 
 ---
 
+## Isolated Worktrees
+
+Multi-agent workflows use isolated `git worktree` directories to keep each agent's workspace independent and prevent branch conflicts.
+
+### Naming Convention
+
+```
+.worktrees/{ticket-id}-{short-description}/
+```
+
+Examples:
+- `.worktrees/PROJ-12-bugfix/`
+- `.worktrees/PROJ-34-auth-migration/`
+- `.worktrees/BUG-56-null-pointer/`
+
+### Path Resolution
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+TICKET_ID=<from confirmed context>
+SHORT_DESC=<from branch name, e.g. "bugfix">
+WORKTREE_PATH="$REPO_ROOT/.worktrees/$TICKET_ID-$SHORT_DESC"
+```
+
+### Creation
+
+```bash
+# From the main repo — create worktree tracking an existing branch
+git worktree add "$WORKTREE_PATH" "$BRANCH"
+
+# Or create with a new branch from a base
+git worktree add -b "$BRANCH" "$WORKTREE_PATH" "$BASE_BRANCH"
+
+# Add to .gitignore (first time in this repo)
+echo ".worktrees/" >> "$REPO_ROOT/.gitignore"
+```
+
+### Confirmation Protocol
+
+Every agent that needs a worktree **must** confirm with the user before proceeding:
+
+- If `WORKTREE_PATH` is provided in shared context → confirm: "Work on `PROJ-12-bugfix` at `$WORKTREE_PATH`?"
+- If not provided → ask: "Which ticket/branch should I work on?"
+
+Agents never silently choose a worktree.
+
+### Per-Agent Rules
+
+| Agent | Worktree | Behavior |
+|-------|----------|----------|
+| Planner | ✅ Create | Creates worktree, stores `WORKTREE_PATH` in task doc |
+| Coder | ✅ Reuse | Detects from task doc or shared context; creates if missing |
+| Brain | ✅ Create | Creates worktree on main branch |
+| Tester | ⚠️ Conditional | Only for new test creation, skip for existing test execution |
+| Reviewer | ❌ None | Uses git-review-cli from MR link, no checkout needed |
+
+### Cleanup
+
+After the MR is merged:
+
+```bash
+git worktree remove ".worktrees/$TICKET_ID-$SHORT_DESC"
+git worktree prune   # clean up stale metadata
+```
+
+---
+
 ## Context Management
 
 If conversation context becomes long, inconsistent, or noisy:

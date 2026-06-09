@@ -93,15 +93,21 @@ If any check fails, its row shows ❌ and the fix action. **Do not proceed until
 
 ---
 
-## Create Feature Branch
+## Create Isolated Worktree
 
-After Phase 1 passes, create a feature branch from main. Brain memories go through a git branch + commit + push cycle.
+After Phase 1 passes, create a worktree from main. Brain memories go through a git branch + commit + push cycle.
 
 ```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
 BRANCH_NAME=setup/brain-{YYYYMMDD}
-git checkout -b "$BRANCH_NAME" {remote}/{main-branch}
+WORKTREE_PATH="$REPO_ROOT/.worktrees/brain-{YYYYMMDD}"
+git worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH" "{remote}/{main-branch}"
+echo ".worktrees/" >> "$REPO_ROOT/.gitignore"
 ```
+
+- Confirm with user: "Work on `brain-{YYYYMMDD}` at `$WORKTREE_PATH`?"
 - Branch naming: `setup/brain-{YYYYMMDD}` (e.g. `setup/brain-20260607`)
+- All subsequent `bash` commands must use `cwd="{WORKTREE_PATH}"`
 - **Reading memories**: Use serena MCP tools (`serena_read_memory`, `serena_list_memories`).
 - **Writing memories**: Use serena MCP tools (`serena_write_memory`, `serena_edit_memory`).
 - **Capture session ID**: Run `CURRENT_SESSION=$(opencode-session | head -1 | awk '{print $1}')` — used for memory metadata.

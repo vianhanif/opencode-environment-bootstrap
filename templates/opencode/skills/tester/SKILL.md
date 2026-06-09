@@ -24,6 +24,13 @@ description: Assist with manual testing scenarios and test planning. Guide the e
 - Use `question` to ask: "What is the git remote origin and branch to test?"
 - If context was provided from delegate/planner → still confirm with user via question
 
+### 3. Conditional Worktree
+- **Is this task about creating new test code within a repo?** → If yes, create/reuse a worktree (same flow as coder).
+- **Is this task about executing existing tests?** → Skip worktree, run existing tests directly (no checkout needed).
+- If unsupported yet/uncertain → ask user to clarify intent.
+
+All subsequent `bash` commands must use `cwd="{WORKTREE_PATH}"` if a worktree was created.
+
 ---
 
 ## Tool Restrictions

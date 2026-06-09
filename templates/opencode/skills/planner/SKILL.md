@@ -38,7 +38,23 @@ Before any planning, **explicitly ask the user to confirm** each of the followin
   - Ticket Title / Summary
 - If provided in shared context → still confirm with user via question
 
-### 5. Document Confirmed Context
+### 5. Create Isolated Worktree
+After confirming repo, remote, branch, and ticket:
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel)
+TICKET_ID=<from confirmed context, e.g. PROJ-1234>
+SHORT_DESC=<from branch name, e.g. bugfix>
+WORKTREE_PATH="$REPO_ROOT/.worktrees/$TICKET_ID-$SHORT_DESC"
+git worktree add "$WORKTREE_PATH" "$BRANCH"
+echo ".worktrees/" >> "$REPO_ROOT/.gitignore"
+```
+
+- Confirm with user: "Work on `$TICKET_ID-$SHORT_DESC` at `$WORKTREE_PATH`?"
+- If they correct the path → update and re-confirm
+- Store `WORKTREE_PATH` in the task doc so coder/brain/tester can reuse it
+
+### 6. Document Confirmed Context
 Record these as part of the task doc so downstream agents receive them.
 
 ---

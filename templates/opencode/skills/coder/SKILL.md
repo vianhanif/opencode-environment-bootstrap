@@ -23,7 +23,21 @@ description: Implement code changes incrementally per task documentation. Follow
 - If context was provided from delegate → still confirm with user via question
 - If user cannot provide → **STOP**, cannot proceed
 
-### 3. Commit & Push
+### 3. Confirm Isolated Worktree
+After confirming repo and branch:
+
+- If `WORKTREE_PATH` is in shared context or task doc → confirm with user: "Work on `$TICKET_ID-$SHORT_DESC` at `$WORKTREE_PATH`?"
+- If not provided → ask user which worktree to use: "What's the ticket ID and branch name?"
+- If worktree doesn't exist yet → create it:
+  ```bash
+  REPO_ROOT=$(git rev-parse --show-toplevel)
+  WORKTREE_PATH="$REPO_ROOT/.worktrees/$TICKET_ID-$SHORT_DESC"
+  git worktree add "$WORKTREE_PATH" "$BRANCH"
+  echo ".worktrees/" >> "$REPO_ROOT/.gitignore"
+  ```
+- All subsequent `bash` commands must use `cwd="{WORKTREE_PATH}"`
+
+### 4. Commit & Push
 After implementing changes, use `question` to ask user to confirm before committing and pushing:
 
 ```bash

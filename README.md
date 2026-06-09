@@ -32,17 +32,17 @@ The `/delegate` command orchestrates 5 agents as an annotated DAG — write one 
 
 | Agent | Role | Enforces |
 |-------|------|----------|
-| `@planner` | Document tasks before coding | Git context, 3-round validation loop, per-scope target branches |
-| `@coder` | Implement changes per spec | Plan-first rule, commit/push, cleanup |
-| `@reviewer` | Validate diffs for correctness | MR confirmation, post review to MR, cleanup |
-| `@tester` | Plan and execute tests | Document results, suggest mode switch to planner/coder for fixes, cleanup |
-| `@analyzer` | Investigate issues and logs | Document root cause, suggest mode switch to planner/coder for fixes, cleanup |
+| `@planner` | Document tasks before coding | Git context, create worktree, 3-round validation loop, per-scope target branches |
+| `@coder` | Implement changes per spec | Reuse worktree, plan-first rule, commit/push |
+| `@reviewer` | Validate diffs for correctness | MR confirmation, no worktree, git-review-cli for review |
+| `@tester` | Plan and execute tests | Conditional worktree, document results, suggest mode switch to planner/coder for fixes |
+| `@analyzer` | Investigate issues and logs | Document root cause, suggest mode switch to planner/coder for fixes |
 
 **Standalone agent** — invoked directly, not via `/delegate`:
 
 | Agent | Role | Enforces |
 |-------|------|----------|
-| `@brain` | Serena-based repo knowledge manager | Main branch only, 3-round Q&A validation, `.serena/` safety checks |
+| `@brain` | Serena-based repo knowledge manager | Main branch only, create worktree, 3-round Q&A validation, `.serena/` safety checks |
 
 **All enforcement steps use the `question` tool** — the AI asks, you confirm. Nothing is auto-evaluated.
 
@@ -53,6 +53,18 @@ The `/delegate` command orchestrates 5 agents as an annotated DAG — write one 
 @result @coder implement auth changes
 @result @reviewer review the changes
 ```
+
+### Isolated Worktrees
+
+Each agent operates in its own `git worktree` to prevent branch conflicts. Worktrees are named `.worktrees/{ticket-id}-{short-description}/` and created automatically by `@planner` and `@brain`. `@coder` reuses the same worktree. `@tester` creates one conditionally. `@reviewer` does not use worktrees — it fetches diffs via `git-review-cli` from the MR URL.
+
+| Agent | Worktree | Why |
+|-------|----------|-----|
+| `@planner` | ✅ Creates | Shares with coder, stores `WORKTREE_PATH` in task doc |
+| `@coder` | ✅ Reuses | Picks up planner's worktree; creates if missing |
+| `@brain` | ✅ Creates | Isolated worktree on main branch for serena memory work |
+| `@tester` | ⚠️ Only if creating new test code | Skips worktree for existing test execution |
+| `@reviewer` | ❌ None | Uses git-review-cli from MR link, no checkout needed |
 
 See [AGENT-SYSTEM.md](AGENT-SYSTEM.md) for the full breakdown.
 

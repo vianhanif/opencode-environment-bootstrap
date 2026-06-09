@@ -8,7 +8,7 @@ A custom opencode command that orchestrates multi-agent workflows via annotated 
 
 ### Pre-Delegation Validation
 
-Before any subagents are launched, `/delegate` enforces 4 explicit confirmations using the `question` tool (never auto-evaluates):
+Before any subagents are launched, `/delegate` enforces 4 explicit confirmations using the `question` tool (never auto-evaluates). These values become **shared context** injected into every subagent's task prompt, including the computed `WORKTREE_PATH`:
 
 | # | Item | Question |
 |---|------|----------|
@@ -57,14 +57,15 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 
 **Enforcements:**
 1. **Git & Context** — Confirm repo, remote, target branch, ticket ID & summary (all via `question` tool, never auto-evaluated)
-2. **Scope Table** — Each scope item must define its own `Target Branch` for downstream delegation
-3. **3-Round Validation Loop** — After producing the doc, enforce minimum 3 rounds of Q&A:
+2. **Create Worktree** — Creates `.worktrees/{ticket-id}-{short-desc}/` via `git worktree add`, confirms with user, stores `WORKTREE_PATH` in task doc
+3. **Scope Table** — Each scope item must define its own `Target Branch` for downstream delegation
+4. **3-Round Validation Loop** — After producing the doc, enforce minimum 3 rounds of Q&A:
    ```
    Round 1 → Update doc → Present for review
    Round 2 → Update doc → Present for review
    Round 3 → Update doc → Present for review
    ```
-4. **Final Confirmation Gate** — Do not proceed until engineer confirms the final doc
+5. **Final Confirmation Gate** — Do not proceed until engineer confirms the final doc
 
 **Model:** deepseek v4 pro
 
@@ -73,8 +74,9 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Purpose:** Implement code changes incrementally per task documentation.
 
 **Enforcements:**
-  1. **Plan-First Rule** — If no planned doc/scope provided → STOP and enforce asking to use `@planner` first
-  2. **Commit & Push** to targeted remote
+   1. **Confirm/Reuse Worktree** — Detects `WORKTREE_PATH` from task doc or shared context, confirms with user; creates one if missing
+   2. **Plan-First Rule** — If no planned doc/scope provided → STOP and enforce asking to use `@planner` first
+   3. **Commit & Push** to targeted remote
 
 **Model:** deepseek v4 flash
 
@@ -85,7 +87,8 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Enforcements:**
 1. **Confirm MR** — Explicitly ask for MR number/URL and verify remote
 2. **Confirm Branches** — Source and target branch via `question`
-3. **Post to MR** — Via `git-review-cli` or `glab`
+3. **No Worktree** — Does NOT create or use a worktree; all review context comes from MR via `git-review-cli`
+4. **Post to MR** — Via `git-review-cli` or `glab`
 
 **Model:** deepseek v4 pro
 
@@ -94,7 +97,8 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Purpose:** Assist with manual testing scenarios and test planning.
 
 **Enforcements:**
-1. **Document Test Results** — Record findings, then suggest switching to planner/coder mode to fix discovered bugs
+1. **Conditional Worktree** — Creates/reuses worktree only if creating new test code; skips for existing test execution
+2. **Document Test Results** — Record findings, then suggest switching to planner/coder mode to fix discovered bugs
 
 ### Analyzer (`@analyzer`)
 
@@ -114,6 +118,7 @@ These participate in `/delegate` DAG orchestration and can be invoked directly v
 **Enforcements:**
 1. **Main Branch Only** — Rejects feature/bugfix WIP branches. Must run from the confirmed main/default branch. Branch name is never hardcoded — always asked at session start.
 2. **Phase 1 — Safety Check** — Validate `.serena/` exists, is NOT gitignored, is tracked by git, pushed to remote, has no uncommitted changes, and `onboard_project` has been run. Produces a shareability verdict before proceeding.
+3. **Create Worktree** — Creates `.worktrees/brain-{YYYYMMDD}/` via `git worktree add -b`, confirms with user
 4. **Phase 2 — Memory Audit** — Read all project-scoped memories and evaluate against an 8-section completeness checklist (architecture, key symbols, API contracts, data model, configuration, conventions, decision records, dependencies).
 5. **Phase 3 — 3-Round Validation** — Multi-round Q&A to surface gaps, clarify assumptions, and strengthen memories with serena's `write_memory`/`edit_memory` tools. Minimum 3 rounds before final gate.
 6. **Source Code Safety** — `edit: deny, write: deny` — cannot touch source files. Uses serena memory tools exclusively.

@@ -27,6 +27,18 @@ description: Review diffs for correctness, risks, and consistency.
 - Use `question` to ask: "What are the source branch and target branch for this review?"
 - Remote origin: confirm with user via question, not auto-detected
 
+### 4. No Worktree Needed
+Reviewer does NOT create or use a worktree. All review context comes from the MR link:
+
+1. **Require an MR URL or number** — refuse to proceed without one
+2. **Use `git-review-cli`** — fetches the diff, performs checkout, and handles review posting
+3. **Do NOT use `git diff` manually** — this risks hallucinating changes not in the MR
+
+```
+❌ Bad: "Let me check out the branch and look at the diff"
+✅ Good: "What's the GitLab MR URL? I'll use git-review-cli to review it."
+```
+
 ---
 
 ## Pre-Review
