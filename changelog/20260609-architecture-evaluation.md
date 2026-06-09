@@ -172,25 +172,56 @@ All three CLIs support MCP with similar schemas. Translation is a direct key-map
 
 ### Critical Finding: The DAG Orchestration Gap
 
-The biggest challenge across all adapters is **multi-agent DAG orchestration**:
+The `/delegate` command is a **custom OpenCode command** defined in `templates/opencode/commands/delegate.md` — not a built-in feature. It works because OpenCode exposes two primitives that the command body instructs the agent to use:
 
-| Capability | OpenCode (native) | Claude CLI | Copilot CLI |
+1. **`task(subagent_type: "<name>")`** — a built-in OpenCode tool that lets the primary agent programmatically spawn subagents with full context injection
+2. **Custom slash commands** — `.md` files in `commands/` registered automatically as `/delegate`
+
+The command body says: "Parse annotations → call `task()` for each → inject shared context → wait for results → chain dependencies". The agent executes this instruction at runtime.
+
+**Neither Claude CLI nor Copilot CLI exposes an equivalent `task()` primitive:**
+
+| Requirement | OpenCode | Claude CLI | Copilot CLI |
 |---|---|---|---|
-| Subagent spawning | `task()` tool | ❌ Not allowed | Model-driven (autonomous) |
-| Sequential DAG | `/delegate` command | ❌ No native support | ❌ No native support |
-| Context passing | Automatic via `@result` | ❌ Manual | ❌ Model-decided |
-| Worktree isolation | Manual (git worktree) | `isolation: worktree` field | ❌ No built-in |
-| External orchestration | N/A (native) | Shell wrapper needed | ACP protocol available |
+| Agent A spawns Agent B programmatically | ✅ `task()` tool | ❌ Subagents can't nest — documented hard limit | ❌ Delegation is model-driven (AI decides), not user-directed |
+| Custom DAG-defined workflow | ✅ `/delegate` (custom `.md` command) | ❌ No custom slash commands. Skills can fork to one subagent (`context: fork`) but can't chain | ❌ No user-definable slash commands. ACP enables external orchestration but not in-CLI |
+| Context injection into subagents | ✅ Automatic via `@result` + prompt injection | ❌ Manual file passing. `--append-system-prompt` flag available externally | ❌ Model-decided, not controllable by user |
+| Interactive mid-flow user questions | ✅ Subagents call `question` tool | ❌ Subagents can't interact mid-flow — they're fire-and-forget | ❌ No equivalent — ACP could approximate but not with same fidelity |
+
+**This is not a format-translation problem — it is a capability gap.** Even with a perfect adapter that translates agent configs and MCP servers, the `delegate.md` command cannot be implemented as an in-CLI command in Claude or Copilot because the underlying runtime doesn't support programmatic subagent spawning with DAG semantics.
 
 **Three approaches to bridge the gap:**
 
-| Approach | Works for | Effort | Reliability |
-|----------|-----------|--------|-------------|
-| **A. Simplified single-agent config** — Claude/Copilot get MCPs + role instructions but no multi-agent orchestration. The agent role (planner/coder/reviewer) is selected at CLI launch time via `claude --agent planner`. | Claude, Copilot | Low | High (no orchestration = no orchestration bugs) |
-| **B. Shell wrapper orchestration** — A script `bin/opencode-delegate` that runs `claude --agent planner "..."` then `claude --agent coder "..."` passing context files between steps. | Claude | Medium | Medium (context passing via files, no feedback loop) |
-| **C. ACP-based orchestrator** — A Python/Node daemon implementing DAG logic, driving Copilot via ACP protocol. | Copilot | High | High (ACP is designed for this) |
+| Approach | Works for | Effort | Reliability | Fidelity |
+|---|---|---|---|---|
+| **A. Simplified single-agent** — Claude/Copilot get MCPs + role instructions but no multi-agent orchestration. User selects role at launch (`claude --agent planner`, `copilot --agent=planner`). | Claude, Copilot | Low | High | Low (no DAG) |
+| **B. Shell wrapper orchestration** — A script that runs `claude --agent planner "..." > /tmp/context && claude --agent coder "$(cat /tmp/context)"` sequentially. No real-time feedback during sub-steps. | Claude | Medium | Medium | Medium (context via files, no interactivity) |
+| **C. ACP-based orchestrator** — A Python/Node daemon that implements DAG logic externally, driving Copilot via Agent Client Protocol. Solves multi-step orchestration at the protocol level. | Copilot | High | High | High (ACP is designed for this) |
 
-**Recommendation for v1:** Approach A (simplified single-agent) for both Claude and Copilot. Ship the DAG orchestration as an optional add-on per CLI, not a blocker for the adapter architecture.
+**Recommendation for v1:** Approach A (simplified single-agent) for both Claude and Copilot. OpenCode remains the only CLI where the full multi-agent DAG workflow runs natively. Ship shell-based orchestration (Approach B) as an optional bin script, not a requirement for the adapter architecture.
+
+---
+
+## Verdict
+
+### Summary
+
+| Layer | Feasibility | Effort | Key Risk |
+|-------|-------------|--------|----------|
+| MCP catalog + translation | ✅ High — all three CLIs support MCP with near-identical schemas | ~20 lines/adapter | None |
+| Agent role translation | ✅ High — each CLI has agent/subagent files or blocks, just different formats | ~50 lines/adapter | Model name mapping across CLIs |
+| OpenCode adapter | ✅ High — generates opencode.json from YAML + markdown | ~150 lines | Must match existing output exactly |
+| Claude adapter | ✅ Medium — config generation straightforward, but writing to `~/.claude.json` is risky | ~250 lines | Auto-managed state file, model name mapping |
+| Copilot adapter | ✅ Medium — config generation fine, but agent prompt limit (30k chars) needs handling | ~300 lines | Prompt truncation, model name mapping |
+| **Multi-agent DAG `/delegate`** | ❌ **Cannot replicate in-CLI** on Claude or Copilot — requires external orchestration | N/A | Capability gap, not format gap |
+
+### Bottom Line
+
+**The three-layer architecture (agent-system/ + mcp/ + cli/{adapters}/) is worth building.** It cleans up the monolithic structure, creates a single source of truth for MCP configs, and makes the agent methodology reusable. The adapters for opencode, Claude, and Copilot are all feasible for the config-generation portion.
+
+**The honest limitation:** OpenCode's multi-agent DAG orchestration (`/delegate` with `task()` tool) is not portable. It relies on OpenCode-specific runtime capabilities that Claude and Copilot don't expose. The adapters can translate MCPs and agent roles, but the workflow orchestration layer is OpenCode-native. For Claude and Copilot, the v1 experience is "configured with the same agent rules but running in simplified single-agent mode."
+
+This is acceptable — the bootstrap's value proposition is "get the same engineering methodology running on any CLI," not "get every CLI to behave identically." MCPs, agent roles, and coding rules are universal. The DAG workflow is a differentiator for OpenCode.
 
 ### What stays (already CLI-agnostic)
 - `templates/shell/`, `templates/zed/`, `templates/ghostty/`, `templates/bruno/`
