@@ -490,16 +490,23 @@ def ensure_opencode_session(vars, dry_run=False):
         _symlink(script, "opencode-session", dry_run)
         info("opencode-session installed")
 
+def _symlink_multilogs(script, name, vars, dry_run):
+    """Create a symlink for multilogs (with both names)."""
+    _symlink(script, name, dry_run)
+    if name == "kubectl-multi-logs":
+        _symlink(script, "multilogs", dry_run)
+
+
 def ensure_kubectl_multi_logs(vars, dry_run=False):
     """Clone kubectl-multi-logs and install."""
-    if shutil.which("kubectl-multi-logs"):
+    if shutil.which("kubectl-multi-logs") and shutil.which("multilogs"):
         return
     step("Dev tool: kubectl-multi-logs")
     projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
     dest = projects_dir / "codes" / "kubectl-multi-logs"
 
     if dest.exists() and (dest / "kubectl-multi-logs").exists():
-        _symlink(dest / "kubectl-multi-logs", "kubectl-multi-logs", dry_run)
+        _symlink_multilogs(dest / "kubectl-multi-logs", "kubectl-multi-logs", vars, dry_run)
         return
 
     if dry_run:
@@ -511,7 +518,7 @@ def ensure_kubectl_multi_logs(vars, dry_run=False):
         _pip_install(dest, dry_run)
     script = dest / "kubectl-multi-logs"
     if script.exists():
-        _symlink(script, "kubectl-multi-logs", dry_run)
+        _symlink_multilogs(script, "kubectl-multi-logs", vars, dry_run)
 
 def ensure_bruno_collections(vars, dry_run=False):
     """Clone Bruno collections from config."""
@@ -1015,6 +1022,7 @@ def verify_deployment(vars, dry_run=False):
         "glab",
         "git-review-cli",
         "opencode-session",
+        "kubectl-multi-logs",
         "multilogs",
         "kubectl",
     ]
