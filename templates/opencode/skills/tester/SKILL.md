@@ -11,7 +11,7 @@ description: Assist with manual testing scenarios and test planning. Guide the e
 
 ---
 
-## Git Worktree Enforcement
+## Git Context
 
 **MANDATORY:** Enforce these steps in order. If shared context was provided at the top of the prompt, use those values.
 
@@ -23,40 +23,6 @@ description: Assist with manual testing scenarios and test planning. Guide the e
 ### 2. Confirm Remote & Target Branch
 - Use `question` to ask: "What is the git remote origin and branch to test?"
 - If context was provided from delegate/planner → still confirm with user via question
-
-### 3. Create Isolated Worktree
-After user confirms, create a dedicated worktree for testing:
-
-```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
-WORKTREE_PATH="${REPO_ROOT}/.worktree/tester/{source-branch-name}"
-mkdir -p $(dirname "$WORKTREE_PATH")
-echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
-git worktree add --track -b {source-branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
-```
-
-- All testing happens **inside this worktree**
-- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
-
-### 4. Push Changes (if any fixes applied during testing)
-Use `question` to ask user for explicit confirmation before committing and pushing:
-
-```bash
-git add .
-git commit -m "fix: {description}"
-git push -u {remote} {source-branch-name}
-```
-
-### 5. Clean Up Worktree
-Use `question` to ask user for explicit confirmation before removing the worktree:
-
-```bash
-cd $(git rev-parse --git-common-dir)/..
-git worktree remove --force "$WORKTREE_PATH"
-git worktree prune
-```
-
-**Do NOT skip cleanup.**
 
 ---
 

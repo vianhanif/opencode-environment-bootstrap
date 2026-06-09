@@ -18,6 +18,8 @@ lazy_load() {
 }
 
 # AWS CLI - lazy loaded with completions
+# Remove any alias so function definition works
+(( ${+aliases[aws]} )) && unalias aws
 aws() {
   unset -f aws
   if command -v aws_completer >/dev/null 2>&1; then

@@ -33,13 +33,6 @@
       },
       "type": "local"
     },
-    "lean-ctx": {
-      "command": [
-        "lean-ctx"
-      ],
-      "enabled": true,
-      "type": "local"
-    },
     "mcp-mermaid": {
       "command": [
         "npx",

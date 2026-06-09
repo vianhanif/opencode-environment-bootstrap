@@ -11,13 +11,6 @@ description: Plan and document engineering tasks before coding. Gather requireme
 
 ---
 
-## Lean-Ctx Worktree Awareness
-
-When using `ctx_*` tools during planning (reading code, searching patterns):
-- If operating in a worktree → always use absolute paths with `{WORKTREE_PATH}` prefix and pass `cwd` to `ctx_shell`
-- If operating in the main repo checkout → confirm `REPO_ROOT=$(git rev-parse --show-toplevel)` and use `{REPO_ROOT}` prefix for all `ctx_*` calls
-- Never use bare relative paths like `ctx_read("go.mod")` — resolve through `{REPO_ROOT}` or `{WORKTREE_PATH}` first
-
 ---
 
 

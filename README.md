@@ -19,10 +19,10 @@ This project codifies that setup into a single, repeatable, version-controlled p
 
 | Layer | What | Files |
 |-------|------|-------|
-| **OpenCode** | 6 custom agents with isolated worktrees and enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, standalone `@brain` agent for repo knowledge management, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, lean-ctx, mermaid, metabase, sequential-thinking, serena), plugins (lean-ctx, caveman, delegate-placeholders) | `~/.config/opencode/` |
+| **OpenCode** | 6 custom agents with enforcement workflows, `/delegate` orchestrator command for multi-agent DAGs, standalone `@brain` agent for repo knowledge management, session workflow rules, caveman commands, MCP servers (context7, duckdb, firecrawl, mermaid, metabase, sequential-thinking, serena), plugins (caveman, delegate-placeholders) | `~/.config/opencode/` |
 | **Shell** | Zsh aliases (git, docker, general, pod-app-list), functions (multilogs), environment exports template, lazy-loaders, kubectl completions | `~/.zsh/` |
-| **Dev tools** | lean-ctx, glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
-| **Zed** | Vim keybindings, LSP config, lean-ctx context rules | `~/.config/zed/` |
+| **Dev tools** | rtk (Rust Token Killer), glab (GitLab CLI), git-review-cli, opencode-session, kubectl-multi-logs, Bruno collections | Installed by default — skip with `--skip-tools` |
+| **Zed** | Vim keybindings, LSP config | `~/.config/zed/` |
 | **Ghostty** | Terminal config (Dracula theme, word-navigation keybinds) | `~/.config/ghostty/` |
 | **Bruno** | API client preferences (dark theme, SSL verification off) | `~/Library/Application Support/Bruno/` |
 
@@ -33,18 +33,18 @@ The `/delegate` command orchestrates 5 agents as an annotated DAG — write one 
 | Agent | Role | Enforces |
 |-------|------|----------|
 | `@planner` | Document tasks before coding | Git context, 3-round validation loop, per-scope target branches |
-| `@coder` | Implement changes per spec | Plan-first rule, isolated worktree (`{repo-root}/.worktree/coder/`), commit/push, cleanup |
-| `@reviewer` | Validate diffs for correctness | MR confirmation, isolated worktree, post review to MR, cleanup |
-| `@tester` | Plan and execute tests | Isolated worktree, document results, suggest mode switch to planner/coder for fixes, cleanup |
-| `@analyzer` | Investigate issues and logs | Isolated worktree, document root cause, suggest mode switch to planner/coder for fixes, cleanup |
+| `@coder` | Implement changes per spec | Plan-first rule, commit/push, cleanup |
+| `@reviewer` | Validate diffs for correctness | MR confirmation, post review to MR, cleanup |
+| `@tester` | Plan and execute tests | Document results, suggest mode switch to planner/coder for fixes, cleanup |
+| `@analyzer` | Investigate issues and logs | Document root cause, suggest mode switch to planner/coder for fixes, cleanup |
 
 **Standalone agent** — invoked directly, not via `/delegate`:
 
 | Agent | Role | Enforces |
 |-------|------|----------|
-| `@brain` | Serena-based repo knowledge manager | Main branch only, isolated worktree, 3-round Q&A validation, `.serena/` safety checks |
+| `@brain` | Serena-based repo knowledge manager | Main branch only, 3-round Q&A validation, `.serena/` safety checks |
 
-**All enforcement steps use the `question` tool** — the AI asks, you confirm. Nothing is auto-evaluated. Every execution agent works in its own `git worktree` so your working directory stays clean.
+**All enforcement steps use the `question` tool** — the AI asks, you confirm. Nothing is auto-evaluated.
 
 ```bash
 # Example — three agents, one /delegate command
@@ -113,7 +113,7 @@ curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/
 --clean                    Wipe managed configs + extras (apps stay installed)
 --skip-opencode            Skip opencode config deployment
 --skip-shell               Skip shell config deployment
---skip-tools               Skip dev tool installation (lean-ctx, glab, git-review-cli, etc.)
+--skip-tools               Skip dev tool installation (rtk, glab, git-review-cli, etc.)
 --skip-apps                Skip app installations (brew cask)
 --skip-app-configs         Skip app config deployments
 --force                    Overwrite without confirmation
@@ -164,7 +164,7 @@ Example config file:
 4. **OpenCode CLI** — Runs the official installer from `opencode.ai`
 5. **OpenCode config** — Backs up any existing `~/.config/opencode/`, then deploys agents, skills, commands, plugins, MCPs, and workflow rules
 6. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
-7. **Dev tools** — Installs lean-ctx, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
+7. **Dev tools** — Installs rtk, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
 8. **App configs** — Deploys Zed, Ghostty, and Bruno configuration (skipped with `--skip-app-configs`)
 9. **Verify** — Confirms key files exist
 10. **Done** — You `source ~/.zshrc`, authenticate `glab auth login`, and add secrets to `~/.zsh/exports.zsh`
@@ -182,10 +182,10 @@ Removes everything the bootstrap manages, but **leaves apps installed**:
 - OpenCode config (`~/.config/opencode/`)
 - Shell dotfiles (`~/.zsh/`, `.zshrc` sourcing block)
 - App configs (zed settings/keymap/rules, ghostty config, Bruno app support)
-- Dev tool symlinks (`kubectl-multi-logs`, `opencode-session`, `lean-ctx`)
+- Dev tool symlinks (`kubectl-multi-logs`, `opencode-session`)
 - Bruno collections and cloned tool repos (`opencode-session-viewer`)
 
-Safe (not touched): zed, ghostty, bruno, glab, opencode CLI, git-review-cli, lean-ctx binary, pip packages, brew formulae.
+Safe (not touched): zed, ghostty, bruno, glab, opencode CLI, git-review-cli, rtk, pip packages, brew formulae.
 
 Shows a full list of what will be removed and prompts `[y/N]` before executing. Combine with `--config` and `--skip-*` flags to re-deploy specific layers after cleaning. Pass `--snapshot FILE` first to back up custom files before wiping.
 
@@ -207,7 +207,7 @@ Shows a full list of what will be removed and prompts `[y/N]` before executing. 
 | `~/.zshrc` | **Appended to, not replaced** | The sourcing block is replaced in-place |
 | `~/.config/zed/settings.json` | **Yes** | Restore from backup |
 | `~/.config/zed/keymap.json` | **Yes** | Restore from backup |
-| `~/.config/zed/rules/lean-ctx.md` | **Yes** | Restore from backup |
+
 | `~/.config/ghostty/config` | **Yes** | Restore from backup |
 | `~/Library/Application Support/Bruno/preferences.json` | **Yes** | Restore from backup |
 
@@ -228,7 +228,6 @@ The opencode config includes several MCP servers that depend on external runtime
 | duckdb | `uvx` | `brew install uv` if missing |
 | firecrawl, mcp-mermaid, metabase, sequential-thinking | `npx` (Node.js) | `brew install node` if missing |
 | serena | `serena` binary | Warns if missing (install via `uv tool install serena-agent`) |
-| lean-ctx | `lean-ctx` binary | Runs install script from [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
 | context7 | None (remote) | Not needed |
 
 The check runs after app installations so Homebrew is ready. Use `--skip-apps` to skip brew-based installs — runtimes will still be flagged if missing.
@@ -238,7 +237,7 @@ The check runs after app installations so Homebrew is ready. Use `--skip-apps` t
 | Component | Source |
 |-----------|--------|
 | **OpenCode** CLI | [opencode.ai](https://opencode.ai) |
-| **lean-ctx** | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) |
+| **rtk** (Rust Token Killer) | [rtk-ai/rtk](https://github.com/rtk-ai/rtk) |
 | **glab** (GitLab CLI) | [gitlab-org/cli](https://gitlab.com/gitlab-org/cli) |
 | **git-review-cli** | [vianhanif/git-review-cli](https://github.com/vianhanif/git-review-cli) |
 | **opencode-session** | [vianhanif/opencode-session-viewer](https://github.com/vianhanif/opencode-session-viewer) |
@@ -261,7 +260,7 @@ installer.py       ← Python installer, reads templates/ and deploys
 templates/         ← Mirror of target file structure, uses $VAR substitution
   opencode/        → ~/.config/opencode/  (config, skills, commands, plugins, AGENTS.md)
   shell/           → ~/.zsh/              (aliases, functions, completions, exports, lazyload)
-  zed/             → ~/.config/zed/       (settings, keymap, lean-ctx rules)
+  zed/             → ~/.config/zed/       (settings, keymap)
   ghostty/         → ~/.config/ghostty/   (terminal config)
   bruno/           → ~/Library/Application Support/Bruno/ (preferences)
 ```

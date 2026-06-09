@@ -6,7 +6,7 @@ Bootstraps a new machine with:
   - OpenCode CLI + config (agents, skills, commands, MCPs, plugins)
   - Shell config (zsh aliases, functions, exports, completions)
   - App configs (Zed editor, Ghostty terminal, Bruno API client)
-  - Optional dev tools (lean-ctx context manager, session helpers)
+  - Optional dev tools (session helpers)
 
 Usage:
   python3 installer.py [options]
@@ -352,23 +352,29 @@ def _symlink(target, name, dry_run=False):
     return True
 
 
-def ensure_lean_ctx(vars, dry_run=False):
-    """Ensure lean-ctx binary is installed."""
-    if shutil.which("lean-ctx"):
+def ensure_rtk(vars, dry_run=False):
+    """Ensure rtk (Rust Token Killer) is installed."""
+    if shutil.which("rtk"):
         return
-    step("Dev tool: lean-ctx")
+    step("Dev tool: rtk (Rust Token Killer)")
     if dry_run:
-        info("[dry-run] Would run install script")
+        info("[dry-run] Would run: brew install rtk")
         return
-    info("Installing lean-ctx...")
+    if shutil.which("brew"):
+        try:
+            run(["brew", "install", "rtk"])
+            return
+        except subprocess.CalledProcessError:
+            warn("brew install rtk failed — trying curl install")
+    info("Installing rtk via curl...")
     try:
         run(["bash", "-c",
-             "curl -fsSL https://raw.githubusercontent.com/yvgude/lean-ctx/main/install.sh | bash"],
+             "curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/master/install.sh | sh"],
             check=False)
-        if not shutil.which("lean-ctx"):
-            warn("Install script finished but lean-ctx not found in PATH")
+        if not shutil.which("rtk"):
+            warn("Install script finished but rtk not found in PATH")
     except FileNotFoundError:
-        warn("curl not available. Install lean-ctx manually from https://github.com/yvgude/lean-ctx")
+        warn("curl not available. Install rtk manually: brew install rtk")
 
 def ensure_glab(vars, dry_run=False):
     """Ensure glab (GitLab CLI) is installed."""
@@ -600,15 +606,18 @@ def deploy_shell_config(vars, dry_run=False):
         return
 
     if not zshrc.exists() or ZSH_SOURCING_HEADER not in zshrc.read_text():
-        with zshrc.open("a" if zshrc.exists() else "w") as f:
-            if zshrc.exists():
-                f.write("\n")
-            f.write(f"\n{ZSH_SOURCING_HEADER}\n")
-            f.write(f'for f in "$HOME/.zsh/aliases"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n')
-            f.write(f'for f in "$HOME/.zsh/functions"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n')
-            f.write(f'[[ -f "$HOME/.zsh/exports.zsh" ]] && source "$HOME/.zsh/exports.zsh"\n')
-            f.write(f'[[ -f "$HOME/.zsh/lazyload.zsh" ]] && source "$HOME/.zsh/lazyload.zsh"\n')
-            f.write(f'{ZSH_SOURCING_FOOTER}\n')
+        block = (
+            f"\n{ZSH_SOURCING_HEADER}\n"
+            f'for f in "$HOME/.zsh/aliases"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n'
+            f'for f in "$HOME/.zsh/functions"/*.zsh; do [[ -f "$f" ]] && source "$f"; done\n'
+            f'[[ -f "$HOME/.zsh/exports.zsh" ]] && source "$HOME/.zsh/exports.zsh"\n'
+            f'[[ -f "$HOME/.zsh/lazyload.zsh" ]] && source "$HOME/.zsh/lazyload.zsh"\n'
+            f"{ZSH_SOURCING_FOOTER}\n"
+        )
+        content = zshrc.read_text() if zshrc.exists() else ""
+        new_content = content + block
+        with zshrc.open("w") as f:
+            f.write(new_content)
         info(f"Added sourcing block to {zshrc}")
 
 
@@ -791,8 +800,8 @@ CLEAN_PATHS = [
     Path.home() / ".local" / "bin" / "git-review-cli",
     Path.home() / ".local" / "bin" / "kubectl-multi-logs",
     Path.home() / ".local" / "bin" / "opencode-session",
-    Path.home() / ".local" / "bin" / "lean-ctx",
-    Path.home() / ".config" / "lean-ctx",
+    Path.home() / ".local" / "bin" / "rtk",
+    Path.home() / ".config" / "rtk",
 ]
 
 
@@ -975,7 +984,7 @@ def main():
 
     # Phase 4: Dev tools
     if not args.skip_tools:
-        ensure_lean_ctx(vars, args.dry_run)
+        ensure_rtk(vars, args.dry_run)
         ensure_glab(vars, args.dry_run)
         ensure_git_review_cli(vars, args.dry_run)
         ensure_opencode_session(vars, args.dry_run)

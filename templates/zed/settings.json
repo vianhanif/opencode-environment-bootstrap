@@ -71,9 +71,6 @@
     "light": "Zed (Default)",
     "dark": "Zed (Default)",
   },
-  "session": {
-    "trust_all_worktrees": true,
-  },
   "terminal": {
     "font_family": "Menlo for Powerline",
     "line_height": {

@@ -55,19 +55,6 @@ Before any delegation, the `/delegate` command enforces — using **explicit `qu
 
 These values become **shared context** injected into every subagent's task prompt.
 
-### Subagent Worktree Enforcement
-Each execution agent enforces its own isolated worktree:
-
-| Agent | Worktree Path | Cleanup Trigger |
-|-------|--------------|----------------|
-| `@coder` | `{repo-root}/.worktree/coder/{source-branch-name}/` | After commit + push |
-| `@tester` | `{repo-root}/.worktree/tester/{source-branch-name}/` | After testing complete |
-| `@analyzer` | `{repo-root}/.worktree/analyzer/{source-branch-name}/` | After analysis complete |
-| `@reviewer` | `{repo-root}/.worktree/reviewer/{target}-to-{source}/` | After review posted to MR |
-| `@brain` | `{repo-root}/.worktree/brain/{source-branch-name}/` | After commit + push or MR |
-
-> `{repo-root}` is `git rev-parse --show-toplevel` of the repository (e.g., `/Users/pid-alvian/Documents/alvian/core`). `{source-branch-name}` is the MR source branch name. Keeping worktrees inside the repo root ensures they fall within lean-ctx's project root security boundary, allowing `ctx_shell(cwd=...)` and absolute-path `ctx_read`/`ctx_search` to work correctly.
-
 ### Delegation Annotations (Multi-Agent Workflow)
 Annotate tasks with role prefixes to delegate to role-specific subagents. The parent agent interprets these as a DAG, resolving dependencies and delegating in order.
 
@@ -389,61 +376,4 @@ This tool is **NOT** for default reasoning. Modern models (DeepSeek v4, GPT-5, C
 
 ---
 
----
 
-# lean-ctx — Context Engineering Layer
-<!-- lean-ctx-rules-v11 -->
-
-## Worktree-Aware Usage (CRITICAL — applies to ALL agents)
-
-When operating inside an isolated worktree (`.worktree/{agent}/{branch}/`), the lean-ctx MCP server resolves paths against a fixed project root, not the worktree. You **must**:
-
-1. **After creating the worktree, resolve and store the absolute path:**
-   ```bash
-   REPO_ROOT=$(git rev-parse --show-toplevel)
-   WORKTREE_PATH="$REPO_ROOT/.worktree/coder/feature-PROJ-1234-desc"
-   echo ".worktree/" >> "$REPO_ROOT/.gitignore"
-   ```
-
-2. **Always pass `{WORKTREE_PATH}` as prefix or `cwd` — never use bare relative paths:**
-   | Instead of | Use | Example |
-   |------------|-----|---------|
-   | `ctx_read("src/main.rs")` | `ctx_read("{WORKTREE_PATH}/src/main.rs", mode)` | `ctx_read("/abs/path/.worktree/coder/.../src/main.rs", "full")` |
-   | `ctx_search("fn", "src/")` | `ctx_search(pattern, "{WORKTREE_PATH}/dir")` | `ctx_search("fn handle", "/abs/path/.worktree/coder/.../src")` |
-   | `ctx_shell("cargo test")` | `ctx_shell(command, cwd=WORKTREE_PATH)` | `ctx_shell("cargo test", cwd="/abs/path/.worktree/coder/...")` |
-
-   **Why:** `ctx_shell` without `cwd` runs from the MCP server's fixed CWD (process CWD), not the worktree. `ctx_read`/`ctx_search` with relative paths also resolve against process CWD or project root — not the worktree. The `cwd` parameter on `ctx_shell` is only honored when the path is within the project root boundary.
-
-## Tool Mapping (MANDATORY — use instead of native equivalents)
-| Instead of | Use | Example (worktree-safe) |
-|------------|-----|--------------------------|
-| Read/cat/head/tail | `ctx_read(path, mode)` | `ctx_read("{WORKTREE_PATH}/src/main.rs", "full")` |
-| Grep/rg/find | `ctx_search(pattern, path)` | `ctx_search("fn handle", "{WORKTREE_PATH}/src")` |
-| Shell/bash (single command) | `ctx_shell(command, cwd)` | `ctx_shell("cargo test", cwd="{WORKTREE_PATH}")` |
-| Shell scripts (multi-statement, variable assignments) | `bash` | worktree creation, cleanup scripts |
-| Edit (when Read unavailable) | `ctx_edit(path, old, new)` | `ctx_edit("{WORKTREE_PATH}/f.rs", "old", "new")` |
-
-## ctx_read Mode Selection
-| Goal | Mode | When |
-|------|------|------|
-| Edit this file | `full` | Before any edit |
-| Understand API | `signatures` | Context-only, won't edit |
-| Re-read after edit | `diff` | Post-edit verification |
-| Large file overview | `map` | >500 lines, won't edit |
-| Specific region | `lines:N-M` | Know exact location |
-
-## Workflow (follow this order)
-1. **Orient:** `ctx_overview(task)` or `ctx_compose(task, path)` for unfamiliar tasks
-2. **Locate:** `ctx_search(pattern, "{WORKTREE_PATH}/...")` for exact text; `ctx_semantic_search(query)` for concepts
-3. **Read:** `ctx_read("{WORKTREE_PATH}/file", mode)` with appropriate mode from table above
-4. **Edit:** `ctx_edit("{WORKTREE_PATH}/file", old_string, new_string)` or native Edit if available
-5. **Verify:** `ctx_read("{WORKTREE_PATH}/file", "diff")` + `ctx_shell("test command", cwd="{WORKTREE_PATH}")`
-6. **Record:** `ctx_knowledge(action="remember", content="...")` for non-obvious findings
-
-## Session
-- **Start:** `ctx_session(action="status")` + `ctx_knowledge(action="wakeup")`
-- **End:** `ctx_session(action="decision", content="what was done + next steps")`
-- **On [CHECKPOINT]:** `ctx_session(action="task", value="current status")`
-
-NEVER use native Read/Grep/Shell when ctx_* equivalents are available.
-<!-- /lean-ctx -->

@@ -11,14 +11,13 @@ description: Review diffs for correctness, risks, and consistency.
 
 ---
 
-## Git Worktree Enforcement
+## Git Context
 
 **MANDATORY:** Enforce these steps in order. If shared context was provided at the top of the prompt, use those values.
 
-### 1. Confirm Git Worktree
+### 1. Confirm Git Repository
 - Use `question` to ask: "What is the git repo path and the branch to review?"
-- Do NOT auto-run `git worktree list` or `git rev-parse` — ask explicitly
-- If not already checked out → create one after user confirms
+- Do NOT auto-run `git rev-parse` — ask explicitly
 
 ### 2. Confirm MR
 - Use `question` to ask: "Which MR (merge request) is being reviewed? Please provide the MR number or URL."
@@ -27,37 +26,6 @@ description: Review diffs for correctness, risks, and consistency.
 ### 3. Confirm Branch & Remote Target
 - Use `question` to ask: "What are the source branch and target branch for this review?"
 - Remote origin: confirm with user via question, not auto-detected
-
-### 4. Create Isolated Reviewing Worktree
-After user confirms all details, create a dedicated worktree for reviewing.
-
-**IMPORTANT:** Use native `bash` (not `ctx_shell`) for multi-statement scripts with variable assignments. `ctx_shell` runs commands in a subshell that does not inherit parent shell variables — single quotes `'...'` prevent expansion and double quotes `"..."` inline secrets.
-
-```bash
-BRANCH_SOURCE={source-branch}
-BRANCH_TARGET={target-branch}
-REPO_ROOT=$(git rev-parse --show-toplevel)
-WORKTREE_PATH="${REPO_ROOT}/.worktree/reviewer/${BRANCH_TARGET}-to-${BRANCH_SOURCE}"
-mkdir -p $(dirname "$WORKTREE_PATH")
-echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
-git worktree add "$WORKTREE_PATH" {remote}/${BRANCH_SOURCE}
-```
-
-- All review (diff analysis, code reading) happens **inside this worktree**
-- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
-
-### 5. Clean Up Worktree
-Use `question` to ask user for explicit confirmation before removing the worktree.
-
-**Use native `bash`** (not `ctx_shell`) for the same reason as above.
-
-```bash
-cd $(git rev-parse --git-common-dir)/..
-git worktree remove --force "$WORKTREE_PATH"
-git worktree prune
-```
-
-**Do NOT skip cleanup.**
 
 ---
 

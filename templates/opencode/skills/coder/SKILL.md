@@ -9,7 +9,7 @@ description: Implement code changes incrementally per task documentation. Follow
 
 ---
 
-## Git Worktree Enforcement
+## Git Context
 
 **MANDATORY:** Enforce these steps in order. If shared context was provided at the top of the prompt, use those values.
 
@@ -23,24 +23,7 @@ description: Implement code changes incrementally per task documentation. Follow
 - If context was provided from delegate → still confirm with user via question
 - If user cannot provide → **STOP**, cannot proceed
 
-### 3. Create Isolated Worktree
-After user confirms, create a dedicated worktree for this work:
-
-```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
-WORKTREE_PATH="${REPO_ROOT}/.worktree/coder/{source-branch-name}"
-mkdir -p $(dirname "$WORKTREE_PATH")
-echo ".worktree/" >> "${REPO_ROOT}/.gitignore"
-
-# Create the worktree (creates branch from the target base)
-git worktree add --track -b {source-branch-name} "$WORKTREE_PATH" {remote}/{target-branch}
-```
-
-- Branch name should follow: `feature/{ticket-id}-{short-description}` or `bugfix/{ticket-id}-{short-description}`
-- All coding happens **inside this worktree**
-- **After creation, store `WORKTREE_PATH`** — all `ctx_read`/`ctx_search` calls must use `{WORKTREE_PATH}` prefix; `ctx_shell` must pass `cwd="{WORKTREE_PATH}"`
-
-### 4. Commit & Push
+### 3. Commit & Push
 After implementing changes, use `question` to ask user to confirm before committing and pushing:
 
 ```bash
@@ -51,20 +34,6 @@ git commit -m "{type}: {short description}
 - Key change 2"
 git push -u {remote} {source-branch-name}
 ```
-
-### 5. Clean Up Worktree
-Use `question` to ask user for explicit confirmation before removing the worktree:
-
-```bash
-# Return to main repo
-cd $(git rev-parse --git-common-dir)/..
-
-# Remove the worktree
-git worktree remove --force "$WORKTREE_PATH"
-git worktree prune
-```
-
-**Do NOT skip cleanup.** Orphan worktrees accumulate on disk.
 
 ---
 
