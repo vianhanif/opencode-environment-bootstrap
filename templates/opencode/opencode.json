@@ -95,7 +95,7 @@
       "type": "local"
     }
   },
-  "plugin": [],
+  "plugin": ["rtk.ts"],
   "agent": {
     "planner": {
       "description": "Understand and document tasks before any coding",

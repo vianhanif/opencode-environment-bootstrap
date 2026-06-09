@@ -329,6 +329,22 @@ opencode-session -s 'text'    # Search session content
 
 Can be used inside OpenCode TUI as: `!opencode-session ses_xxx` or `!opencode-session -s 'text'`
 
+### rtk — Rust Token Killer
+CLI proxy that compresses command output to reduce LLM token consumption by 60-90%.
+
+```bash
+rtk git status                    # Compact git status
+rtk ls -la                        # Compact directory listing
+rtk docker ps                     # Compact docker output
+rtk kubectl get pods              # Compact kubectl output
+rtk npm test                      # Compact npm test output
+rtk cargo test                    # Compact cargo test output
+rtk pip list                      # Compact pip output
+rtk gain                          # Show token savings summary
+```
+
+**Integration:** The RTK OpenCode plugin (`plugins/rtk.ts`) automatically rewrites bash/shell commands to use rtk equivalents. All agents should prefer running commands through rtk where supported.
+
 ### multilogs — Kubernetes Log Aggregation
 Aggregate logs from multiple Kubernetes pods across services.
 

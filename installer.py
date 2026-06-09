@@ -315,12 +315,19 @@ REPOS = {
 }
 
 def _clone_repo(url, dest, dry_run=False):
-    """Clone a git repo shallowly. Returns True on success."""
+    """Clone a git repo shallowly, or pull if already exists. Returns True on success."""
     if not shutil.which("git"):
         warn("git not found — skipping clone")
         return False
     if dry_run:
         info(f"[dry-run] Would clone {url} to {dest}")
+        return True
+    if dest.exists():
+        info(f"Repo exists at {dest} — pulling latest")
+        try:
+            run(["git", "-C", str(dest), "pull", "--ff-only"], check=False)
+        except subprocess.CalledProcessError:
+            warn(f"git pull failed for {dest}")
         return True
     dest.parent.mkdir(parents=True, exist_ok=True)
     run(["git", "clone", "--depth", "1", url, str(dest)])
@@ -375,6 +382,20 @@ def ensure_rtk(vars, dry_run=False):
             warn("Install script finished but rtk not found in PATH")
     except FileNotFoundError:
         warn("curl not available. Install rtk manually: brew install rtk")
+
+def _init_rtk_opencode(vars, dry_run=False):
+    """Configure rtk as an OpenCode plugin."""
+    if not shutil.which("rtk"):
+        return
+    step("RTK: OpenCode plugin")
+    if dry_run:
+        info("[dry-run] Would run: rtk init -g --opencode")
+        return
+    try:
+        run(["rtk", "init", "-g", "--opencode"], check=False)
+        info("RTK OpenCode plugin installed")
+    except FileNotFoundError:
+        warn("rtk binary not found — skip plugin setup")
 
 def ensure_glab(vars, dry_run=False):
     """Ensure glab (GitLab CLI) is installed."""
@@ -991,15 +1012,19 @@ def main():
         ensure_kubectl_multi_logs(vars, args.dry_run)
         ensure_bruno_collections(vars, args.dry_run)
 
-    # Phase 5: App configs
+    # Phase 5: RTK OpenCode integration (needs rtk binary + opencode config deployed)
+    if not args.skip_tools and not args.skip_opencode:
+        _init_rtk_opencode(vars, args.dry_run)
+
+    # Phase 6: App configs (was Phase 5)
     if not args.skip_app_configs:
         deploy_app_configs(vars, args.dry_run)
 
-    # Phase 6: Restore snapshot (after all deployments)
+    # Phase 7: Restore snapshot (after all deployments)
     if args.restore_snapshot:
         restore_snapshot(args.restore_snapshot, args.dry_run)
 
-    # Phase 7: Verify
+    # Phase 8: Verify
     verify_deployment(vars, args.dry_run)
 
     # Summary
