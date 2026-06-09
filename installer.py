@@ -358,7 +358,9 @@ def _symlink(target, name, dry_run=False):
     """Symlink target to ~/.local/bin/{name}."""
     local_bin = Path.home() / ".local" / "bin"
     link = local_bin / name
-    if link.exists() or link.is_symlink():
+    if link.is_symlink() and not link.exists():
+        link.unlink()
+    elif link.exists():
         return True
     if dry_run:
         info(f"[dry-run] Would symlink: {link} → {target}")
@@ -497,6 +499,25 @@ def _symlink_multilogs(script, name, vars, dry_run):
         _symlink(script, "multilogs", dry_run)
 
 
+def _build_go_project(dest, dry_run=False):
+    """Build a Go project at dest, returning the binary path or None."""
+    binary = dest / "kubectl-multi-logs"
+    if binary.exists():
+        return binary
+    if not shutil.which("go"):
+        warn("go not found — cannot build kubectl-multi-logs")
+        return None
+    if dry_run:
+        info(f"[dry-run] Would build: go build -o {binary} .")
+        return binary
+    try:
+        run(["go", "build", "-o", str(binary), "."], cwd=str(dest))
+        return binary
+    except subprocess.CalledProcessError:
+        warn(f"go build failed for {dest}")
+        return None
+
+
 def ensure_kubectl_multi_logs(vars, dry_run=False):
     """Clone kubectl-multi-logs and install."""
     if shutil.which("kubectl-multi-logs") and shutil.which("multilogs"):
@@ -505,18 +526,23 @@ def ensure_kubectl_multi_logs(vars, dry_run=False):
     projects_dir = Path(vars.get("PROJECTS_DIR", "~/projects")).expanduser()
     dest = projects_dir / "codes" / "kubectl-multi-logs"
 
-    if dest.exists() and (dest / "kubectl-multi-logs").exists():
-        _symlink_multilogs(dest / "kubectl-multi-logs", "kubectl-multi-logs", vars, dry_run)
+    if dest.exists() and (dest / "go.mod").exists():
+        _clone_repo(REPOS["kubectl-multi-logs"], dest, dry_run)
+        binary = _build_go_project(dest, dry_run)
+        if binary and binary.exists():
+            _symlink_multilogs(binary, "kubectl-multi-logs", vars, dry_run)
         return
 
     if dry_run:
-        info(f"[dry-run] Would clone to {dest}, pip install, and symlink")
+        info(f"[dry-run] Would clone to {dest}, build, and symlink")
         return
 
     _clone_repo(REPOS["kubectl-multi-logs"], dest, dry_run)
     if (dest / "setup.py").exists() or (dest / "pyproject.toml").exists():
         _pip_install(dest, dry_run)
     script = dest / "kubectl-multi-logs"
+    if not script.exists() and (dest / "go.mod").exists():
+        script = _build_go_project(dest, dry_run) or script
     if script.exists():
         _symlink_multilogs(script, "kubectl-multi-logs", vars, dry_run)
 
