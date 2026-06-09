@@ -952,33 +952,11 @@ def _verify_zsh_sourcing():
     return False
 
 
-def _verify_opencode_repo():
-    """Check ~/.config/opencode/ is a git repo."""
-    git_dir = Path.home() / ".config" / "opencode" / ".git"
-    if git_dir.exists():
-        info(f"  ✓ OpenCode config is git-versioned")
-        return True
-    warn(f"  ✗ OpenCode config is NOT git-versioned — run with --version-control")
-    return False
-
-
-def _verify_bootstrap_version():
-    """Check the bootstrap version is recorded in the deployed config."""
-    ver_file = Path.home() / ".config" / "opencode" / ".bootstrap-version"
-    if ver_file.exists():
-        deployed = ver_file.read_text().strip()
-        if deployed == BOOTSTRAP_VERSION:
-            info(f"  ✓ Bootstrap version {deployed}")
-            return True
-        warn(f"  ✗ Bootstrap version mismatch: deployed={deployed}, current={BOOTSTRAP_VERSION}")
-        return False
-    warn(f"  ✗ Bootstrap version not recorded")
-    return False
-
-
 def verify_deployment(vars, dry_run=False):
     """Verify that key files were deployed correctly."""
     step("Verification")
+
+    info(f"Bootstrap version: {BOOTSTRAP_VERSION}")
 
     # File existence
     info("Files:")
@@ -1008,45 +986,12 @@ def verify_deployment(vars, dry_run=False):
     info("\nShell config:")
     shell_ok = _verify_zsh_sourcing()
 
-    # OpenCode config versioning
-    info("\nVersion control:")
-    repo_ok = _verify_opencode_repo()
-    ver_ok = _verify_bootstrap_version()
-
-    all_ok = all([files_ok, bins_ok, shell_ok, repo_ok, ver_ok])
+    all_ok = all([files_ok, bins_ok, shell_ok])
     print()
     if all_ok:
         info("All checks passed")
     else:
         warn("Some checks failed — see above")
-
-
-# ── Version control ──
-
-def _init_opencode_git_repo(vars, dry_run=False):
-    """Init a git repo in ~/.config/opencode/ if not already one."""
-    if dry_run:
-        return
-
-    opencode_dir = Path.home() / ".config" / "opencode"
-    git_dir = opencode_dir / ".git"
-    if git_dir.exists():
-        info("OpenCode config already version-controlled")
-        return
-
-    step("Versioning opencode config")
-    run(["git", "init"], cwd=str(opencode_dir))
-    run(["git", "-c", "user.name=opencode-bootstrap",
-         "-c", "user.email=bootstrap@opencode.ai",
-         "add", "-A"], cwd=str(opencode_dir))
-    # Record bootstrap version
-    (opencode_dir / ".bootstrap-version").write_text(BOOTSTRAP_VERSION + "\n")
-    run(["git", "add", "-f", ".bootstrap-version"], cwd=str(opencode_dir))
-    run(["git", "-c", "user.name=opencode-bootstrap",
-         "-c", "user.email=bootstrap@opencode.ai",
-         "commit", "-m", f"Initial opencode config from opencode-environment-bootstrap v{BOOTSTRAP_VERSION}"],
-         cwd=str(opencode_dir))
-    info(f"OpenCode config versioned ({BOOTSTRAP_VERSION})")
 
 
 # ── Main ──
@@ -1115,7 +1060,6 @@ def main():
     if not args.skip_opencode:
         ensure_opencode(vars, args.dry_run)
         backup = deploy_opencode_config(vars, args.dry_run)
-        _init_opencode_git_repo(vars, args.dry_run)
 
     # Phase 3: Shell config
     if not args.skip_shell:

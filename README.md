@@ -176,8 +176,7 @@ Example config file:
 3. **MCP runtimes** — Checks for `npx` (Node.js), `uvx`, and `serena`; installs missing ones via Homebrew
 4. **OpenCode CLI** — Runs the official installer from `opencode.ai`
 5. **OpenCode config** — Backs up any existing `~/.config/opencode/`, then deploys agents, skills, commands, plugins, MCPs, and workflow rules
-6. **Version control** — Initializes `~/.config/opencode/` as a git repo, commits all files, and records the bootstrap version for future change tracking
-7. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
+6. **Shell config** — Writes zsh aliases, functions, completions, lazy-loader, and exports template; appends sourcing block to `~/.zshrc`
 8. **Dev tools** — Installs rtk, glab, git-review-cli, opencode-session, kubectl-multi-logs, and optionally clones Bruno collections
 9. **App configs** — Deploys Zed, Ghostty, and Bruno configuration (skipped with `--skip-app-configs`)
 10. **Verify** — Checks file existence, binary availability, shell config integrity, opencode git repo status, and bootstrap version tracking
@@ -201,12 +200,11 @@ python3 installer.py --verify
 python3 installer.py --force
 ```
 
-Checks five categories:
+Checks four categories:
+- **Version** — bootstrap version (from `VERSION` file)
 - **Files** — key config files exist
 - **Binaries** — opencode, rtk, glab, git-review-cli, opencode-session, multilogs, kubectl in PATH
 - **Shell config** — `.zshrc` has the bootstrap sourcing block
-- **Version control** — `~/.config/opencode/` is a git repo
-- **Bootstrap version** — deployed version matches the current installer
 
 ### `--clean` (wipe configs + extras)
 
@@ -221,17 +219,6 @@ Removes everything the bootstrap manages, but **leaves apps installed**:
 Safe (not touched): zed, ghostty, bruno, glab, opencode CLI, git-review-cli, rtk, pip packages, brew formulae.
 
 Shows a full list of what will be removed and prompts `[y/N]` before executing. Combine with `--config` and `--skip-*` flags to re-deploy specific layers after cleaning. Pass `--snapshot FILE` first to back up custom files before wiping.
-
-### Version control
-
-After deployment, `~/.config/opencode/` is initialized as a git repo with an initial commit recording the bootstrap version. This lets you:
-
-- **Track changes** — `cd ~/.config/opencode && git log` to see what changed between re-runs
-- **Roll back** — `git checkout <hash>` if a re-run broke something
-- **Diff updates** — `git diff` to inspect what the installer changed
-- **Know your version** — `cat ~/.config/opencode/.bootstrap-version`
-
-The commit is made with a generic identity (`opencode-bootstrap <bootstrap@opencode.ai>`) — the repo is for tracking config changes, not for pushing.
 
 ### What gets replaced
 
