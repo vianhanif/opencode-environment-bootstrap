@@ -115,33 +115,16 @@ Task documentation lives in the `changelog/` folder (singular) in each service r
 
 ## Model Selection
 
-Models are defined in `opencode.json` per agent, resolved from env vars at install time. Do not override in SKILL.md.
+Models are defined in `opencode.json` per agent. Do not override in SKILL.md.
 
-| Agent | Model | Env Var |
-|-------|-------|---------|
-| **Planner** | deepseek v4 pro | `$MODEL_PLANNER` |
-| **Coder** | deepseek v4 flash | `$MODEL_CODER` |
-| **Reviewer** | deepseek v4 pro | `$MODEL_REVIEWER` |
-| **Tester** | deepseek v4 flash | `$MODEL_TESTER` |
-| **Analyzer** | deepseek v4 pro | `$MODEL_ANALYZER` |
-| **Brain** | deepseek v4 pro | `$MODEL_BRAIN` |
-
-### Overriding Models
-
-To override a model, set the env var before running bootstrap, or persist it in the local overrides file (never overwritten):
-
-```zsh
-# ~/.zsh/exports.local.zsh
-export MODEL_PLANNER="anthropic/claude-sonnet-4-20250514"
-export MODEL_CODER="opencode-go/deepseek-v4-flash"
-```
-
-Then re-run bootstrap to bake the new values into `opencode.json`:
-
-```bash
-source ~/.zshrc
-curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | bash
-```
+| Agent | Model |
+|-------|-------|
+| **Planner** | deepseek v4 pro |
+| **Coder** | deepseek v4 flash |
+| **Reviewer** | deepseek v4 pro |
+| **Tester** | deepseek v4 flash |
+| **Analyzer** | deepseek v4 pro |
+| **Brain** | deepseek v4 pro
 
 ---
 
