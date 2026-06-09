@@ -115,6 +115,12 @@ def resolve_variables(args):
         "METABASE_USER": os.environ.get("METABASE_USER", ""),
         "METABASE_PASS": os.environ.get("METABASE_PASS", ""),
         "INSTALL_DEV_TOOLS": os.environ.get("INSTALL_DEV_TOOLS", "false"),
+        "MODEL_PLANNER": os.environ.get("MODEL_PLANNER", "opencode-go/deepseek-v4-pro"),
+        "MODEL_CODER": os.environ.get("MODEL_CODER", "opencode-go/deepseek-v4-flash"),
+        "MODEL_REVIEWER": os.environ.get("MODEL_REVIEWER", "opencode-go/deepseek-v4-pro"),
+        "MODEL_TESTER": os.environ.get("MODEL_TESTER", "opencode-go/deepseek-v4-flash"),
+        "MODEL_ANALYZER": os.environ.get("MODEL_ANALYZER", "opencode-go/deepseek-v4-pro"),
+        "MODEL_BRAIN": os.environ.get("MODEL_BRAIN", "opencode-go/deepseek-v4-pro"),
     }
 
     # Load config file if provided
