@@ -116,6 +116,19 @@ curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/
   bash -s -- --restore-snapshot ~/bootstrap-backup.zip --config /path/to/local-config.json
 ```
 
+### Check version
+
+```bash
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
+  bash -s -- --version
+```
+
+Or locally:
+
+```bash
+python3 installer.py --version
+```
+
 ### Options
 
 ```
@@ -124,6 +137,7 @@ curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/
 --restore-snapshot FILE    Restore snapshot after deployment
 --clean                    Wipe managed configs + extras (apps stay installed)
 --verify                   Run comprehensive installation verification (standalone or after deploy)
+--version                  Print bootstrap version (works remotely with curl | bash)
 --skip-opencode            Skip opencode config deployment
 --skip-shell               Skip shell config deployment
 --skip-tools               Skip dev tool installation (rtk, glab, git-review-cli, etc.)
