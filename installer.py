@@ -602,6 +602,10 @@ def deploy_opencode_config(vars, dry_run=False):
         deploy_file(f, dst, vars)
         info(str(dst))
 
+    # Record bootstrap version
+    ver_file = opencode_dir / ".bootstrap-version"
+    ver_file.write_text(BOOTSTRAP_VERSION + "\n")
+
     info("OpenCode config deployed")
     return backup
 
@@ -1021,7 +1025,39 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print(BOOTSTRAP_VERSION)
+        local_ver = None
+        local_file = Path.home() / ".config" / "opencode" / ".bootstrap-version"
+        if local_file.exists():
+            local_ver = local_file.read_text().strip()
+
+        remote_ver = None
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                "https://raw.githubusercontent.com/vianhanif/opencode-environment-bootstrap/main/VERSION",
+                headers={"User-Agent": "opencode-bootstrap"},
+            )
+            resp = urllib.request.urlopen(req, timeout=5)
+            remote_ver = resp.read().decode().strip()
+        except Exception:
+            pass
+
+        if local_ver:
+            print(f"  Installed: {local_ver}")
+        else:
+            print(f"  Installed: (none)")
+
+        if remote_ver:
+            print(f"  Latest:    {remote_ver}")
+            if local_ver == remote_ver:
+                print(f"  ✓ Up to date")
+            elif local_ver:
+                print(f"  ⚠ Update available: {local_ver} → {remote_ver}")
+            else:
+                print(f"  → Run installer to deploy")
+        else:
+            print(f"  Latest:    (could not check)")
+
         return
 
     if args.dry_run:

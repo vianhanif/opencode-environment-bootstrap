@@ -7,7 +7,26 @@ NAME="opencode-bootstrap"
 # Handle --version without downloading
 for arg in "$@"; do
   if [[ "$arg" == "--version" ]]; then
-    curl -fsSL "$REPO/raw/main/VERSION" 2>/dev/null || echo "unknown"
+    local_file="$HOME/.config/opencode/.bootstrap-version"
+    if [[ -f "$local_file" ]]; then
+      local_ver=$(cat "$local_file")
+      echo "  Installed: $local_ver"
+    else
+      echo "  Installed: (none)"
+    fi
+    remote=$(curl -fsSL "$REPO/raw/main/VERSION" 2>/dev/null || echo "")
+    if [[ -n "$remote" ]]; then
+      echo "  Latest:    $remote"
+      if [[ "${local_ver:-}" == "$remote" ]]; then
+        echo "  ✓ Up to date"
+      elif [[ -n "${local_ver:-}" ]]; then
+        echo "  ⚠ Update available: $local_ver → $remote"
+      else
+        echo "  → Run installer to deploy"
+      fi
+    else
+      echo "  Latest:    (could not check)"
+    fi
     exit 0
   fi
 done

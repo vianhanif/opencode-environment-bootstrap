@@ -118,6 +118,8 @@ curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/
 
 ### Check version
 
+Check the installed version and compare against the latest available:
+
 ```bash
 curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | \
   bash -s -- --version
@@ -127,6 +129,14 @@ Or locally:
 
 ```bash
 python3 installer.py --version
+```
+
+Output shows installed version (from `~/.config/opencode/.bootstrap-version`), latest version from GitHub, and whether you're up to date:
+
+```
+  Installed: 1.0.0
+  Latest:    1.0.0
+  ✓ Up to date
 ```
 
 ### Options
