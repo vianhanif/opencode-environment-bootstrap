@@ -51,6 +51,34 @@ Six agents total: five delegation agents and one standalone knowledge agent. Eac
 
 These participate in `/delegate` DAG orchestration and can be invoked directly via `/agent <name>`. All five have `mode: "all"`.
 
+### Overriding Agent Models
+
+Each agent's model is set via an env var, with a default baked into `opencode.json` at install time:
+
+| Agent | Env Var | Default |
+|-------|---------|---------|
+| **Planner** | `$MODEL_PLANNER` | `opencode-go/deepseek-v4-pro` |
+| **Coder** | `$MODEL_CODER` | `opencode-go/deepseek-v4-flash` |
+| **Reviewer** | `$MODEL_REVIEWER` | `opencode-go/deepseek-v4-pro` |
+| **Tester** | `$MODEL_TESTER` | `opencode-go/deepseek-v4-flash` |
+| **Analyzer** | `$MODEL_ANALYZER` | `opencode-go/deepseek-v4-pro` |
+| **Brain** | `$MODEL_BRAIN` | `opencode-go/deepseek-v4-pro` |
+
+**To override**, set the env var in `~/.zsh/exports.local.zsh` (never overwritten by bootstrap):
+
+```zsh
+# ~/.zsh/exports.local.zsh
+export MODEL_PLANNER="anthropic/claude-sonnet-4-20250514"
+export MODEL_CODER="opencode-go/deepseek-v4-flash"
+```
+
+Then re-run bootstrap to bake new values into `opencode.json`:
+
+```bash
+source ~/.zshrc
+curl -fsSL https://github.com/vianhanif/opencode-environment-bootstrap/raw/main/bootstrap.sh | bash
+```
+
 ### Planner (`@planner`)
 
 **Purpose:** Understand and document tasks before any coding.
