@@ -30,3 +30,7 @@ export PATH="$HOME/.opencode/bin:$PATH"
 
 # Local binaries
 export PATH="$HOME/.local/bin:$PATH"
+
+# Local overrides — create ~/.zsh/exports.local.zsh for custom env vars
+# This file is NOT overwritten by opencode-bootstrap.
+[[ -f "$HOME/.zsh/exports.local.zsh" ]] && source "$HOME/.zsh/exports.local.zsh"

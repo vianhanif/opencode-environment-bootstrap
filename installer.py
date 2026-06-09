@@ -688,7 +688,8 @@ def deploy_shell_config(vars, dry_run=False):
         info("No shell templates found — skipping")
         return
 
-    deploy_tree(src_dir, dst_root, vars, dry_run=dry_run)
+    # Skip local overrides — never overwritten so user edits persist
+    deploy_tree(src_dir, dst_root, vars, dry_run=dry_run, skip=["exports.local.zsh"])
 
     # Add sourcing block to .zshrc
     zshrc = Path.home() / ".zshrc"
@@ -757,10 +758,11 @@ def print_summary(vars, backup=None, args=None):
     print()
     print("  Next steps:")
     print(f"    1. source ~/.zshrc")
-    print("    2. Add your secrets to ~/.zsh/exports.zsh (API keys, etc.)")
-    print("    3. If you skipped Context7/Firecrawl keys, add them later:")
-    print("       export CONTEXT7_API_KEY='...'")
-    print("       export FIRECRAWL_API_KEY='...'")
+    print("    2. Add your API keys to ~/.zsh/exports.zsh")
+    print("    3. Custom overrides (never overwritten):")
+    print("       → Create ~/.zsh/exports.local.zsh with:")
+    print("         export MODEL_PLANNER=your-model")
+    print("         export CONTEXT7_API_KEY=your-key")
     print("    4. Restart opencode to load new config")
     print("    5. If using git-review-cli, authenticate glab:")
     print("       glab auth login  # or set GITLAB_TOKEN")
