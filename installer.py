@@ -24,6 +24,7 @@ Options:
   --snapshot FILE     Create ZIP snapshot of custom files and exit
   --restore-snapshot FILE  Restore snapshot after deployment
   --clean             Remove managed configs + extras (apps stay installed)
+  --verify            Run comprehensive installation verification (standalone or after deploy)
 
 Config variables (env vars or config file):
   PROJECTS_DIR       Code projects location          (default: ~/projects)
@@ -63,6 +64,9 @@ TEMPLATES_DIR = SCRIPT_DIR / "templates"
 ZSH_SOURCING_HEADER = "# --- opencode-bootstrap: zsh config ---"
 ZSH_SOURCING_FOOTER = "# --- /opencode-bootstrap ---"
 DEFAULT_PROJECTS = "~/projects"
+
+VERSION_FILE = SCRIPT_DIR / "VERSION"
+BOOTSTRAP_VERSION = VERSION_FILE.read_text().strip() if VERSION_FILE.exists() else "unknown"
 
 # Files to skip if they contain secrets (never template-ified)
 SKIP_PATTERNS = [
@@ -914,12 +918,70 @@ def clean_machine(vars=None, dry_run=False):
 
 # ── Verification ──
 
+
+def _verify_file(path, label):
+    """Check a single file exists and return True if OK."""
+    if path.exists():
+        info(f"  ✓ {label}: {path}")
+        return True
+    warn(f"  ✗ {label}: {path} not found")
+    return False
+
+
+def _verify_binary(name):
+    """Check a binary is in PATH."""
+    ok = shutil.which(name) is not None
+    if ok:
+        info(f"  ✓ Binary {name}")
+    else:
+        warn(f"  ✗ Binary {name} — not in PATH")
+    return ok
+
+
+def _verify_zsh_sourcing():
+    """Check .zshrc has the bootstrap sourcing block."""
+    zshrc = Path.home() / ".zshrc"
+    if not zshrc.exists():
+        warn(f"  ✗ .zshrc not found")
+        return False
+    text = zshrc.read_text()
+    if ZSH_SOURCING_HEADER in text:
+        info(f"  ✓ Shell sourcing block in .zshrc")
+        return True
+    warn(f"  ✗ Shell sourcing block missing from .zshrc")
+    return False
+
+
+def _verify_opencode_repo():
+    """Check ~/.config/opencode/ is a git repo."""
+    git_dir = Path.home() / ".config" / "opencode" / ".git"
+    if git_dir.exists():
+        info(f"  ✓ OpenCode config is git-versioned")
+        return True
+    warn(f"  ✗ OpenCode config is NOT git-versioned — run with --version-control")
+    return False
+
+
+def _verify_bootstrap_version():
+    """Check the bootstrap version is recorded in the deployed config."""
+    ver_file = Path.home() / ".config" / "opencode" / ".bootstrap-version"
+    if ver_file.exists():
+        deployed = ver_file.read_text().strip()
+        if deployed == BOOTSTRAP_VERSION:
+            info(f"  ✓ Bootstrap version {deployed}")
+            return True
+        warn(f"  ✗ Bootstrap version mismatch: deployed={deployed}, current={BOOTSTRAP_VERSION}")
+        return False
+    warn(f"  ✗ Bootstrap version not recorded")
+    return False
+
+
 def verify_deployment(vars, dry_run=False):
     """Verify that key files were deployed correctly."""
-    if dry_run:
-        return
-
     step("Verification")
+
+    # File existence
+    info("Files:")
     checks = [
         (Path.home() / ".config" / "opencode" / "opencode.json", "OpenCode config"),
         (Path.home() / ".config" / "opencode" / "AGENTS.md", "OpenCode AGENTS.md"),
@@ -927,15 +989,64 @@ def verify_deployment(vars, dry_run=False):
         (Path.home() / ".zsh" / "aliases" / "git.zsh", "Shell aliases"),
         (Path.home() / ".zsh" / "lazyload.zsh", "Lazyload"),
     ]
-    all_ok = True
-    for path, label in checks:
-        if path.exists():
-            info(f"  ✓ {label}: {path}")
-        else:
-            warn(f"  ✗ {label}: {path} not found")
-            all_ok = False
+    files_ok = all(_verify_file(p, l) for p, l in checks)
+
+    # Binaries
+    info("\nBinaries:")
+    binaries = [
+        "opencode",
+        "rtk",
+        "glab",
+        "git-review-cli",
+        "opencode-session",
+        "multilogs",
+        "kubectl",
+    ]
+    bins_ok = all(_verify_binary(b) for b in binaries)
+
+    # Shell
+    info("\nShell config:")
+    shell_ok = _verify_zsh_sourcing()
+
+    # OpenCode config versioning
+    info("\nVersion control:")
+    repo_ok = _verify_opencode_repo()
+    ver_ok = _verify_bootstrap_version()
+
+    all_ok = all([files_ok, bins_ok, shell_ok, repo_ok, ver_ok])
+    print()
     if all_ok:
         info("All checks passed")
+    else:
+        warn("Some checks failed — see above")
+
+
+# ── Version control ──
+
+def _init_opencode_git_repo(vars, dry_run=False):
+    """Init a git repo in ~/.config/opencode/ if not already one."""
+    if dry_run:
+        return
+
+    opencode_dir = Path.home() / ".config" / "opencode"
+    git_dir = opencode_dir / ".git"
+    if git_dir.exists():
+        info("OpenCode config already version-controlled")
+        return
+
+    step("Versioning opencode config")
+    run(["git", "init"], cwd=str(opencode_dir))
+    run(["git", "-c", "user.name=opencode-bootstrap",
+         "-c", "user.email=bootstrap@opencode.ai",
+         "add", "-A"], cwd=str(opencode_dir))
+    # Record bootstrap version
+    (opencode_dir / ".bootstrap-version").write_text(BOOTSTRAP_VERSION + "\n")
+    run(["git", "add", "-f", ".bootstrap-version"], cwd=str(opencode_dir))
+    run(["git", "-c", "user.name=opencode-bootstrap",
+         "-c", "user.email=bootstrap@opencode.ai",
+         "commit", "-m", f"Initial opencode config from opencode-environment-bootstrap v{BOOTSTRAP_VERSION}"],
+         cwd=str(opencode_dir))
+    info(f"OpenCode config versioned ({BOOTSTRAP_VERSION})")
 
 
 # ── Main ──
@@ -960,6 +1071,7 @@ def main():
     parser.add_argument("--snapshot", metavar="FILE", help="Create ZIP snapshot of custom files and exit")
     parser.add_argument("--restore-snapshot", metavar="FILE", help="Restore snapshot after deployment")
     parser.add_argument("--clean", action="store_true", help="Remove managed configs before install")
+    parser.add_argument("--verify", action="store_true", help="Run comprehensive installation verification")
     args = parser.parse_args()
 
     if args.dry_run:
@@ -974,6 +1086,11 @@ def main():
                 print(f"  {k}=***")
             else:
                 print(f"  {k}={v}")
+
+    # Standalone verify mode: run checks and exit (verify is always read-only)
+    if args.verify and not args.clean and not args.snapshot and not args.restore_snapshot:
+        verify_deployment(vars, dry_run=False)
+        return
 
     # Snapshot mode: create and exit
     if args.snapshot:
@@ -998,6 +1115,7 @@ def main():
     if not args.skip_opencode:
         ensure_opencode(vars, args.dry_run)
         backup = deploy_opencode_config(vars, args.dry_run)
+        _init_opencode_git_repo(vars, args.dry_run)
 
     # Phase 3: Shell config
     if not args.skip_shell:
