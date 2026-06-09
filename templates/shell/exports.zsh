@@ -8,13 +8,13 @@
 # export CONTEXT7_API_KEY="${CONTEXT7_API_KEY:-}"
 # export FIRECRAWL_API_KEY="${FIRECRAWL_API_KEY:-}"
 
-# OpenCode agent models (uncomment to override defaults)
-# export MODEL_PLANNER="${MODEL_PLANNER:-opencode-go/deepseek-v4-pro}"
-# export MODEL_CODER="${MODEL_CODER:-opencode-go/deepseek-v4-flash}"
-# export MODEL_REVIEWER="${MODEL_REVIEWER:-opencode-go/deepseek-v4-pro}"
-# export MODEL_TESTER="${MODEL_TESTER:-opencode-go/deepseek-v4-flash}"
-# export MODEL_ANALYZER="${MODEL_ANALYZER:-opencode-go/deepseek-v4-pro}"
-# export MODEL_BRAIN="${MODEL_BRAIN:-opencode-go/deepseek-v4-pro}"
+# OpenCode agent models (set env var before sourcing to override)
+export MODEL_PLANNER="${MODEL_PLANNER:-opencode-go/deepseek-v4-pro}"
+export MODEL_CODER="${MODEL_CODER:-opencode-go/deepseek-v4-flash}"
+export MODEL_REVIEWER="${MODEL_REVIEWER:-opencode-go/deepseek-v4-pro}"
+export MODEL_TESTER="${MODEL_TESTER:-opencode-go/deepseek-v4-flash}"
+export MODEL_ANALYZER="${MODEL_ANALYZER:-opencode-go/deepseek-v4-pro}"
+export MODEL_BRAIN="${MODEL_BRAIN:-opencode-go/deepseek-v4-pro}"
 
 # Go module private repos (set your org)
 # export GOPRIVATE=gitlab.com/your-org
