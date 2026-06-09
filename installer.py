@@ -1022,7 +1022,6 @@ def verify_deployment(vars, dry_run=False):
         "glab",
         "git-review-cli",
         "opencode-session",
-        "kubectl-multi-logs",
         "multilogs",
         "kubectl",
     ]
