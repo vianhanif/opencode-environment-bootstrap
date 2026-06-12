@@ -320,7 +320,7 @@ def ensure_apps(vars, dry_run=False):
 
 REPOS = {
     "kubectl-multi-logs":  "https://github.com/vianhanif/kubectl-multi-logs.git",
-    "git-review-cli":      "git+https://github.com/vianhanif/git-review-cli.git",
+    "git-review-cli":      "git+https://github.com/vianhanif/git-review-cli.git@v1.0.6",
     "opencode-session":    "https://github.com/vianhanif/opencode-session-viewer.git",
 }
 
@@ -463,7 +463,7 @@ def ensure_git_review_cli(vars, dry_run=False):
         _pip_install(REPOS["git-review-cli"], dry_run)
     except Exception as e:
         warn(f"git-review-cli install failed: {e}")
-        info("Manual: pip3 install git+https://github.com/vianhanif/git-review-cli.git")
+        info("Manual: pip3 install git+https://github.com/vianhanif/git-review-cli.git@v1.0.6")
         return
     # Symlink to ~/.local/bin in case pip installed it off PATH
     pip_path = shutil.which("git-review-cli")
